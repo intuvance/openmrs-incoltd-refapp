@@ -1,0 +1,167 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>io.github.miirochristopher</groupId>
+    <artifactId>intuvance-siteconfiguration</artifactId>
+    <version>2.0.0</version>
+    <packaging>pom</packaging>
+    <name>Intuvance Site Configuration Content Package</name>
+    <description>Site-specific configuration layer for the OpenMRS O3 Reference Application distribution.
+Applies ON TOP OF the official org.openmrs.content:referenceapplication core content package and never replaces it.</description>
+    <url>https://github.com/intuvance/openmrs-content-referenceapplication</url>
+
+    <licenses>
+        <license>
+            <name>Mozilla Public License 2.0</name>
+            <url>https://www.mozilla.org/MPL/2.0/</url>
+        </license>
+    </licenses>
+    
+    <developers>
+        <developer>
+            <id>cmiiro</id>
+            <name>Christopher Miiro</name>
+            <organization>Intuvance</organization>
+            <organizationUrl>https://intuvance.com</organizationUrl>
+        </developer>
+    </developers>
+    <scm>
+        <connection>scm:git:git@github.com:intuvance/openmrs-content-referenceapplication.git</connection>
+        <developerConnection>scm:git:git@github.com:intuvance/openmrs-content-referenceapplication.git</developerConnection>
+        <url>https://github.com/intuvance/openmrs-content-referenceapplication.git</url>
+      <tag>HEAD</tag>
+  </scm>
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <configuration.dir>${project.basedir}/configuration</configuration.dir>
+    </properties>
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.openmrs.maven.plugins</groupId>
+                <artifactId>openmrs-packager-maven-plugin</artifactId>
+                <version>1.9.0</version>
+                <executions>
+                    <execution>
+                        <id>validate-content-package</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>validate-content-package</goal>
+                        </goals>
+                        <configuration>
+                            <sourceFile>${project.basedir}/content.properties</sourceFile>
+                        </configuration>
+                    </execution>
+                    <!-- Commented out for now
+                    <execution>
+                        <id>validate-configurations</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>validate-configurations</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDir>${configuration.dir}/backend_configuration</sourceDir>
+                        </configuration>
+                    </execution>
+                    -->
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>3.7.1</version>
+                <executions>
+                    <execution>
+                        <id>make-assembly</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>single</goal>
+                        </goals>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>${project.basedir}/assembly.xml</descriptor>
+                            </descriptors>
+                            <!-- Setting appendAssemblyId to false ensures that the assembly ID
+                            is not appended to the final name of the assembled artifact -->
+                            <appendAssemblyId>false</appendAssemblyId>
+                            <finalName>${project.artifactId}-${project.version}</finalName>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Filter content.properties into target/ so that the assembly places a
+                 *filtered* copy at the root of the zip. The OpenMRS SDK reads
+                 name, version, content.* dependencies and var.* defaults from it. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.basedir}</directory>
+                                    <includes>
+                                        <include>content.properties</include>
+                                    </includes>
+                                    <filtering>true</filtering>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!-- Reproducible build: no source/javadoc/gpg/central-publishing plugins.
+                 Signing and publishing to Maven Central are release concerns and are
+                 intentionally not part of `mvn install`, which the distribution build runs. -->
+        </plugins>
+    </build>
+    <repositories>
+        <repository>
+            <id>openmrs-repo</id>
+            <name>OpenMRS Public Repository</name>
+            <url>https://mavenrepo.openmrs.org/public</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>openmrs-repo-snapshots</id>
+            <name>OpenMRS Snapshot Repository</name>
+            <url>https://mavenrepo.openmrs.org/snapshots</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>central</id>
+            <name>Maven Central</name>
+            <url>https://repo1.maven.org/maven2</url>
+        </repository>
+    </repositories>
+    <pluginRepositories>
+        <pluginRepository>
+            <id>openmrs-repo</id>
+            <name>OpenMRS Public Repository</name>
+            <url>https://mavenrepo.openmrs.org/public</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
+</project>

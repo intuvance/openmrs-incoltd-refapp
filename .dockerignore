@@ -1,0 +1,30 @@
+**/target/
+**/.DS_Store
+**/node_modules/
+**/node
+*.iml
+.idea/
+
+# Secrets. `.env` holds database credentials; it must never enter a build context.
+.env
+.env.*
+!.env.example
+
+# Database dumps contain a full copy of a database, including any PHI.
+deployment/db/seed.sql
+dump.sql
+*.sql.gz
+
+# CI and agent tooling that is not part of the build.
+.github/
+.git/
+.gitignore
+
+# Documentation and developer notes that the build does not read.
+README.md
+docs/
+CLAUDE.md
+.claude/
+
+# Local build logs from long-running image builds.
+.build-logs/

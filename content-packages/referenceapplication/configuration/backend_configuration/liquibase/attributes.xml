@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.9"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.9
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.9.xsd">
+
+	<!-- Make visit_attribute.value_reference nullable -->
+	
+	<changeSet id="2025-11-11-11-11-PM-11" author="miirochristopher" runAlways="true">
+		<comment>
+			Drop the NOT NULL constraint on the value_reference column of the visit_attribute table.
+			This change is idempotent, meaning it can be run safely multiple times.
+		</comment>
+		
+		<sql>
+			ALTER TABLE visit_attribute MODIFY COLUMN value_reference TEXT NULL;
+		</sql>
+	</changeSet>
+</databaseChangeLog>

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.9"
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.9
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.9.xsd">
+
+    <!--
+        Defines the structure of the referral_source table. 
+    -->
+	
+	<changeSet id="2025-11-21-10-25-PM-25" author="miirochristopher" runAlways="true">
+		<comment>
+		    Create the referral_source table
+		</comment>
+		<sql>
+            CREATE TABLE IF NOT EXISTS referral_source (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                name VARCHAR(255),
+                phone VARCHAR(255),
+                email VARCHAR(255),
+                address VARCHAR(255),
+                owner INT,
+                creator INT NOT NULL,
+                date_created DATETIME NOT NULL,
+                changed_by INT,
+                date_changed DATETIME,
+                voided BOOLEAN DEFAULT FALSE NOT NULL,
+                voided_by INT,
+                date_voided DATETIME,
+                void_reason VARCHAR(255) DEFAULT 'NULL',
+                uuid CHAR(38) NOT NULL UNIQUE,
+                FOREIGN KEY (owner) REFERENCES users(user_id)
+            );
+		</sql>
+	</changeSet>
+</databaseChangeLog>

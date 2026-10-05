@@ -1,0 +1,32 @@
+<config>
+    <globalProperties>
+        <globalProperty>
+            <property>concept.true</property>
+            <value>1</value>
+        </globalProperty>
+        <globalProperty>
+            <property>concept.false</property>
+            <value>2</value>
+        </globalProperty>
+        <globalProperty>
+            <property>visits.assignmentHandler</property>
+            <value>org.openmrs.api.handler.ExistingVisitAssignmentHandler</value>
+        </globalProperty>
+        <globalProperty>
+            <!-- OpenMRS Login Location.
+                 The "Login Location" tag itself is defined in
+                 configuration/backend_configuration/locationtags/locationtags.csv,
+                 and the location carrying that tag is in
+                 configuration/backend_configuration/locations/locations.csv.
+                 Both are required for the login-location workflow to work; this
+                 property alone is not sufficient.
+
+                 The UUID is injected from the site content package variable
+                 `default.login.location`, which is defaulted in content.properties
+                 and can be overridden per deployment with
+                 `var.default.login.location=<uuid>` in distro.properties. -->
+            <property>login.location</property>
+            <value>${default.login.location}</value>
+        </globalProperty>
+    </globalProperties>
+</config>

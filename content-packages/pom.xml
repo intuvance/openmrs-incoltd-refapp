@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>io.github.miirochristopher</groupId>
+  <artifactId>intuvance-content</artifactId>
+  <version>2.0.0</version>
+  <packaging>pom</packaging>
+
+  <name>Intuvance Site Configuration Content Packages</name>
+  <description>
+    Aggregator for the local/site configuration content packages of this
+    distribution. These packages are the site configuration source of truth and
+    are layered ON TOP OF the official OpenMRS Reference Application content
+    package (org.openmrs.content:referenceapplication), which is never modified.
+  </description>
+
+  <modules>
+    <module>referenceapplication</module>
+  </modules>
+
+</project>

@@ -1,0 +1,234 @@
+# ---------------------------------------------------------------------------
+# Intuvance OpenMRS O3 distribution -- production stack.
+#
+# Configuration is split by ownership, and nothing here duplicates content that
+# belongs in the content packages or in the site configuration layer:
+#
+#   core/         upstream OpenMRS images and upstream configuration
+#   site/         content-packages/referenceapplication (site metadata)
+#   deployment/   this file and deployment/ (images, ports, credentials, health)
+#   secrets/      never in this repository; supplied via .env or Docker secrets
+#
+# Every image is pinned by digest. Every credential comes from the environment.
+#
+# Container names
+# Compose's generated names derive from the project directory name, which here
+# is long, truncated and unstable: the stack came up as
+# `openmrs-distro-referenceapplication-371-backend-1`. Every service therefore
+# declares an explicit container_name, so `docker logs`, `docker exec` and
+# `docker stats` work without first looking the name up. Override
+# OMRS_NAME_PREFIX when running a second copy of this stack on one host.
+# ---------------------------------------------------------------------------
+
+services:
+  # --- deployment: TLS termination / routing --------------------------------
+  gateway:
+    container_name: "${OMRS_NAME_PREFIX:-omrs}-gateway"
+    image: ${OMRS_GATEWAY_IMAGE:?set OMRS_GATEWAY_IMAGE in .env}
+    restart: unless-stopped
+    depends_on:
+      frontend:
+        condition: service_healthy
+      backend:
+        condition: service_started
+    ports:
+      - "${OMRS_HTTP_PORT:-8080}:80"
+    healthcheck:
+      # Served by the gateway itself (see gateway/default.conf.template), so this
+      # reports whether nginx is serving, independently of the backend. The
+      # previous check requested /nginx-health, which no location matched, so
+      # nginx served it from the static root and answered 404 forever: the
+      # container was permanently unhealthy while proxying traffic correctly.
+      test: ["CMD", "curl", "-fsS", "http://localhost/nginx-health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    networks:
+      - openmrs-network
+
+  # --- core: O3 frontend ----------------------------------------------------
+  frontend:
+    container_name: "${OMRS_NAME_PREFIX:-omrs}-frontend"
+    image: ${OMRS_FRONTEND_IMAGE:?set OMRS_FRONTEND_IMAGE in .env}
+    restart: unless-stopped
+    environment:
+      SPA_PATH: /openmrs/spa
+      API_URL: /openmrs
+      # The frontend configuration is produced by the site content package and
+      # installed by the Initializer into openmrs_config/frontend_configuration/.
+      # SPA_CONFIG_URLS points at what the Initializer actually wrote.
+      SPA_CONFIG_URLS: ${OMRS_SPA_CONFIG_URLS:-/openmrs/spa/config-core.json}
+      SPA_DEFAULT_LOCALE: ${OMRS_SPA_DEFAULT_LOCALE:-en}
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost/"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+    networks:
+      - openmrs-network
+
+  # --- core: OpenMRS backend + modules + site configuration -----------------
+  backend:
+    container_name: "${OMRS_NAME_PREFIX:-omrs}-backend"
+    image: ${OMRS_BACKEND_IMAGE:?set OMRS_BACKEND_IMAGE in .env}
+    restart: unless-stopped
+    # The backend must not start until the database is initialised, so that the
+    # first startup already sees CIEL and the core metadata.
+    depends_on:
+      db-init:
+        condition: service_completed_successfully
+    environment:
+      OMRS_CONFIG_MODULE_WEB_ADMIN: ${OMRS_CONFIG_MODULE_WEB_ADMIN:-true}
+      OMRS_CONFIG_CREATE_TABLES: ${OMRS_CONFIG_CREATE_TABLES:-true}
+      OMRS_CONFIG_AUTO_UPDATE_DATABASE: ${OMRS_CONFIG_AUTO_UPDATE_DATABASE:-true}
+      OMRS_CONFIG_CONNECTION_SERVER: db
+      OMRS_CONFIG_CONNECTION_DATABASE: ${OMRS_DB_NAME:-openmrs}
+      OMRS_CONFIG_CONNECTION_USERNAME: ${OMRS_DB_USER:?set OMRS_DB_USER in .env}
+      OMRS_CONFIG_CONNECTION_PASSWORD: ${OMRS_DB_PASSWORD:?set OMRS_DB_PASSWORD in .env}
+      OMRS_CONFIG_MODULE_ID: ${OMRS_CONFIG_MODULE_ID:-ReferenceApplication}
+      # Search index rebuilds on boot make restarts slow and must not be required
+      # for the system to become usable.
+      OMRS_CONFIG_SCHEDULER_STARTUP: ${OMRS_CONFIG_SCHEDULER_STARTUP:-false}
+      OMRS_CONFIG_SESSION_TIMEOUT: ${OMRS_SESSION_TIMEOUT:-3600}
+      # Session cookie hardening. The gateway terminates TLS, so this is only
+      # correct when HTTPS is in use; see the README security section.
+      OMRS_CONFIG_WEBSERVICES_REST_PROXY: ${OMRS_REST_PROXY:-}
+      OMRS_CONFIG_DAO_MAX_CONNECTION_SIZE: ${OMRS_DB_POOL_SIZE:-50}
+    volumes:
+      - openmrs-data:/openmrs/data
+    healthcheck:
+      # Two conditions, because neither alone is sufficient.
+      #
+      # The HTTP probe means the WAR is deployed and the datasource is reachable.
+      # It does NOT mean the modules started: Tomcat serves /initialsetup well
+      # before OpenMRS finishes loading them, and it kept returning 200 through a
+      # startup in which every module had failed. So this alone reported a
+      # completely broken install as healthy.
+      #
+      # The module check is what actually catches that. Modules are unpacked into
+      # the persistent volume on first boot, so an interrupted startup can leave
+      # zero-byte jars behind; OpenMRS then logs "zip file is empty" for each and
+      # skips the module. The volume is reused on the next `up`, so the corruption
+      # survives restarts and looks like a code defect it is not. Failing the
+      # healthcheck surfaces it instead of hiding it, and the fix is to remove the
+      # volume:  docker volume rm omrs-openmrs-data
+      #
+      # A partial count is deliberately not an error here -- OpenMRS unpacks
+      # modules progressively -- but zero modules, or any empty jar, means the
+      # extraction failed rather than is still in progress.
+      test:
+        - CMD-SHELL
+        - >-
+          curl -fsS --max-time 10 http://localhost:8080/openmrs/initialsetup >/dev/null &&
+          [ -d /openmrs/data/.openmrs-lib-cache ] &&
+          [ "$$(ls -1 /openmrs/data/.openmrs-lib-cache 2>/dev/null | wc -l)" -gt 0 ] &&
+          [ -z "$$(find /openmrs/data/.openmrs-lib-cache -name '*.jar' -size 0 2>/dev/null | head -1)" ]
+      interval: 15s
+      # Must exceed curl's own --max-time, or docker kills the probe mid-request
+      # while the application is still initialising and reports "exceeded
+      # timeout" instead of the real result.
+      timeout: 20s
+      retries: 40
+      # A cold first start runs the Initializer over every content package, which
+      # takes minutes. Do not judge it before that has had a chance to finish.
+      start_period: 300s
+    networks:
+      - openmrs-network
+
+  # --- deployment: one-shot database initialisation -------------------------
+  # Seeds the pre-populated metadata and rotates credentials exactly once, then
+  # exits 0. On every subsequent `up` and on `restart` it detects the marker and
+  # exits immediately, so restarts never repeat expensive work.
+  #
+  # The image is the seed image (see deployment/db/Dockerfile): a MariaDB base
+  # carrying a sanitised seed.sql at /openmrs-seed/seed.sql. Because it is based
+  # on MariaDB it also provides the `mariadb` client the job needs, so no
+  # separate tooling image is required.
+  db-init:
+    container_name: "${OMRS_NAME_PREFIX:-omrs}-db-init"
+    image: ${OMRS_DB_SEED_IMAGE:?set OMRS_DB_SEED_IMAGE in .env}
+    restart: "no"
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      OMRS_DB_HOST: db
+      OMRS_DB_PORT: "3306"
+      OMRS_DB_NAME: ${OMRS_DB_NAME:-openmrs}
+      OMRS_DB_USER: ${OMRS_DB_USER:?set OMRS_DB_USER in .env}
+      OMRS_DB_PASSWORD: ${OMRS_DB_PASSWORD:?set OMRS_DB_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
+      OMRS_DB_SEED_ENABLED: ${OMRS_DB_SEED_ENABLED:-true}
+      OMRS_DB_SEED_DIR: /openmrs-seed
+      OMRS_DB_SEED_FILE: /openmrs-seed/seed.sql
+      OMRS_DB_SEED_USER: ${OMRS_DB_SEED_USER:-openmrs}
+      OMRS_DB_SEED_PASSWORD: ${OMRS_DB_SEED_PASSWORD:-openmrs}
+      OMRS_DB_PURGE_AFTER_SEED: ${OMRS_DB_PURGE_AFTER_SEED:-false}
+    volumes:
+      # The job script and the purge tool, read-only.
+      - ./deployment/db/seed.sh:/usr/local/bin/seed.sh:ro
+      - ./deployment/db/purge-demo-data.sql:/usr/local/share/purge-demo-data.sql:ro
+    entrypoint: ["/bin/bash", "/usr/local/bin/seed.sh"]
+    networks:
+      - openmrs-network
+
+  # --- core: pre-populated MariaDB ------------------------------------------
+  db:
+    container_name: "${OMRS_NAME_PREFIX:-omrs}-db"
+    image: ${OMRS_MARIADB_IMAGE:?set OMRS_MARIADB_IMAGE in .env}
+    restart: unless-stopped
+    command: >
+      mysqld
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_general_ci
+      --max_allowed_packet=256M
+    # No ports section on purpose: the database is reachable only on the internal
+    # compose network. Exposing 3306 is never required by this stack.
+    environment:
+      MYSQL_DATABASE: ${OMRS_DB_NAME:-openmrs}
+      MYSQL_USER: ${OMRS_DB_USER:?set OMRS_DB_USER in .env}
+      MYSQL_PASSWORD: ${OMRS_DB_PASSWORD:?set OMRS_DB_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 40
+      start_period: 30s
+    networks:
+      - openmrs-network
+
+# Volume names
+#   Compose prefixes named volumes with the project name, which is derived from
+#   the directory this file lives in. That directory is long, gets truncated, and
+#   changes if the checkout is moved or renamed, so the volumes ended up as
+#   `openmrs-distro-referenceapplication-371_db-data`. Worse, the name is not
+#   guaranteed stable across machines or checkouts, so a volume can be silently
+#   orphaned -- `docker volume ls` then shows two similarly named volumes and it
+#   is not obvious which one holds the clinical record.
+#
+#   Setting `name:` pins the volume name to OMRS_NAME_PREFIX, the same variable
+#   that names the containers, so `docker volume ls` reads consistently with
+#   `docker ps`:
+#
+#     omrs-db-data      the clinical record      -- back this up
+#     omrs-openmrs-data uploads and config state -- back this up
+#
+#   Because the name no longer carries the project name, `docker compose down`
+#   still removes them (it tracks them by project label), but `down -v` and
+#   `docker volume rm` need the exact name. Keep OMRS_NAME_PREFIX constant across
+#   restarts: changing it orphans the old volumes rather than reusing them.
+volumes:
+  openmrs-data:
+    name: "${OMRS_NAME_PREFIX:-omrs}-openmrs-data"
+  db-data:
+    name: "${OMRS_NAME_PREFIX:-omrs}-db-data"
+
+networks:
+  openmrs-network:
+    name: openmrs-network
+    driver: bridge

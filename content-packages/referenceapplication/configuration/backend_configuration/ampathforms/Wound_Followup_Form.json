@@ -1,0 +1,1668 @@
+{
+  "name": "Wound Followup Form",
+  "uuid": "991da845-b3d1-4e58-baf9-e8b3072d2512",
+  "description": "Suubi EMR wound followup form",
+  "version": "1",
+  "published": true,
+  "retired": false,
+  "encounter": "Wound Followup",
+  "encounterType": "91662d59-2b62-44f6-acff-5d2b5f0f6595",
+  "processor": "EncounterFormProcessor",
+  "pages": [
+    {
+      "label": "Encounter Details",
+      "sections": [
+        {
+          "label": "Encounter Details",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "label": "Visit date:",
+              "type": "encounterDatetime",
+              "required": "true",
+              "default": "",
+              "id": "encDate",
+              "questionOptions": {
+                "rendering": "datetime"
+              },
+              "validators": [
+                {
+                  "type": "date"
+                }
+              ]
+            },
+            {
+              "type": "encounterProvider",
+              "label": "Provider:",
+              "id": "provider",
+              "required": "true",
+              "default": "",
+              "questionOptions": {
+                "rendering": "ui-select-extended"
+              }
+            },
+            {
+              "type": "encounterLocation",
+              "label": "Visit Location:",
+              "id": "location",
+              "required": "true",
+              "questionOptions": {
+                "rendering": "ui-select-extended"
+              }
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "162696AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [
+                  {
+                    "concept": "1065AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Yes"
+                  },
+                  {
+                    "concept": "1066AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "No"
+                  },
+                  {
+                    "concept": "1067AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Unknown"
+                  }
+                ]
+              },
+              "id": "Consent",
+              "label": "Consent",
+              "required": true
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Vitals",
+      "sections": [
+        {
+          "label": "Vital Signs",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "label": "BP systolic:",
+              "id": "syst",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "5085AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "250",
+                "min": "0"
+              },
+              "type": "obs",
+              "validators": [],
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "label": "BP diastolic:",
+              "id": "dias",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "5086AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "150",
+                "min": "0"
+              },
+              "type": "obs",
+              "validators": [],
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "label": "Pulse (Rate/min):",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "5087AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "230",
+                "min": "0"
+              },
+              "type": "obs",
+              "validators": [],
+              "id": "__u805r8rHt",
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "label": "Temperature (C) or (F):",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "5088AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "120",
+                "min": "25"
+              },
+              "type": "obs",
+              "validators": [],
+              "id": "__FHzsrptpt"
+            },
+            {
+              "label": "Weight (Kg):",
+              "id": "weight",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "5089AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "250",
+                "min": "0"
+              },
+              "type": "obs",
+              "validators": []
+            },
+            {
+              "label": "Height (cm):",
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "5090AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "228",
+                "min": "0"
+              },
+              "historicalExpression": "_.isEmpty(HD.getObject('prevEnc').getValue('5090AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')) ? undefined : HD.getObject('prevEnc').getValue('5090AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')",
+              "id": "height",
+              "validators": []
+            },
+            {
+              "label": "Sp02:",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "5092AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "100",
+                "min": "0"
+              },
+              "type": "obs",
+              "validators": [],
+              "id": "__EqFJ4372y"
+            },
+            {
+              "label": "BMI (Kg/m2):",
+              "id": "bmi",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "1342AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "100",
+                "min": "0",
+                "calculate": {
+                  "calculateExpression": "calcBMI(height,weight)"
+                }
+              },
+              "type": "obs",
+              "validators": []
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "b3cfcead-b27d-4609-ba00-d31c861c5e33"
+              },
+              "id": "pain",
+              "label": "Pain",
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "5242AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "99.0",
+                "min": "0"
+              },
+              "id": "respirotaryRate",
+              "label": "RR",
+              "questionInfo": "Allows decimals"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Current Symptoms",
+      "sections": [
+        {
+          "label": "Infection Screening Questions",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "label": "Limited Mobility",
+              "required": "true",
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "162753AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [
+                  {
+                    "concept": "1067AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Unknown"
+                  },
+                  {
+                    "concept": "159468AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Physically able to work"
+                  },
+                  {
+                    "concept": "160026AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Patient ambulatory"
+                  },
+                  {
+                    "concept": "162752AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Bedridden"
+                  },
+                  {
+                    "concept": "162750AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Able to walk without assistance"
+                  },
+                  {
+                    "concept": "162751AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Able to walk with assistance"
+                  }
+                ]
+              },
+              "validators": [],
+              "id": "limitedMobility"
+            },
+            {
+              "label": "Signs of Infection",
+              "required": "true",
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "6c948588-9eff-44fe-849a-a405905f8e07",
+                "answers": [
+                  {
+                    "concept": "1066AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "No"
+                  },
+                  {
+                    "concept": "1065AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Yes"
+                  }
+                ]
+              },
+              "validators": [],
+              "id": "signsOfInfection"
+            },
+            {
+              "label": "Recent Fever",
+              "required": "true",
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "37a9cf1e-f415-4b84-a3fb-9f8f24d6c8a0",
+                "answers": [
+                  {
+                    "concept": "1065AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Yes"
+                  },
+                  {
+                    "concept": "1066AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "No"
+                  }
+                ]
+              },
+              "validators": [],
+              "id": "recentFever"
+            },
+            {
+              "label": "Changes in Medication since last Visit.",
+              "required": "true",
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "633ff176-d4bb-4983-97ad-d52eea36ff74",
+                "answers": [
+                  {
+                    "concept": "1065AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Yes"
+                  },
+                  {
+                    "concept": "1066AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "No"
+                  }
+                ]
+              },
+              "validators": [],
+              "id": "changesInMedicationSinceLastVisit"
+            },
+            {
+              "type": "control",
+              "concept": "160632AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+              "questionOptions": {
+                "rendering": "text"
+              },
+              "id": "notes",
+              "label": "Notes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Test Results",
+      "sections": [
+        {
+          "label": "Chemistry Lab Tests",
+          "questions": [
+            {
+              "type": "obs",
+              "label": "Creatinine mmol/L:",
+              "id": "creatinine_test",
+              "questionOptions": {
+                "concept": "790AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "rendering": "number",
+                "showDate": "true",
+                "max": "11050",
+                "min": "0",
+                "shownDateOptions": {
+                  "validators": [
+                    {
+                      "type": "date"
+                    },
+                    {
+                      "type": "js_expression",
+                      "failsWhenExpression": "!isEmpty(creatinine_test) && isEmpty(myValue)",
+                      "message": "Date is result is required."
+                    }
+                  ],
+                  "hide": {
+                    "hideWhenExpression": "isEmpty(creatinine_test)"
+                  }
+                }
+              },
+              "validators": []
+            },
+            {
+              "type": "obs",
+              "label": "SGPT(ALT):",
+              "id": "sgptalt_test",
+              "questionOptions": {
+                "concept": "654AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "rendering": "number",
+                "max": "3500",
+                "min": "0",
+                "showDate": "true",
+                "shownDateOptions": {
+                  "validators": [
+                    {
+                      "type": "date"
+                    },
+                    {
+                      "type": "js_expression",
+                      "failsWhenExpression": "!isEmpty(sgptalt_test) && isEmpty(myValue)",
+                      "message": "Date is result is required."
+                    }
+                  ],
+                  "hide": {
+                    "hideWhenExpression": "isEmpty(sgptalt_test)"
+                  }
+                }
+              },
+              "validators": []
+            },
+            {
+              "type": "obs",
+              "label": "AST:",
+              "id": "ast_test",
+              "questionOptions": {
+                "concept": "653AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "rendering": "number",
+                "max": "3500",
+                "min": "0",
+                "showDate": "true"
+              },
+              "shownDateOptions": {
+                "validators": [
+                  {
+                    "type": "date"
+                  },
+                  {
+                    "type": "js_expression",
+                    "failsWhenExpression": "!isEmpty(ast_test) && isEmpty(myValue)",
+                    "message": "Date is result is required."
+                  }
+                ],
+                "hide": {
+                  "hideWhenExpression": "isEmpty(ast_test)"
+                }
+              },
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "label": "RBS mmol/L:",
+              "id": "rbs_test",
+              "type": "obs",
+              "questionOptions": {
+                "concept": "887AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [],
+                "rendering": "number",
+                "max": "50",
+                "min": "0",
+                "showDate": "true",
+                "shownDateOptions": {
+                  "validators": [
+                    {
+                      "type": "date"
+                    },
+                    {
+                      "type": "js_expression",
+                      "failsWhenExpression": "!isEmpty(rbs_test) && isEmpty(myValue)",
+                      "message": "Date is result is required."
+                    }
+                  ],
+                  "hde": {
+                    "hideWhenExpression": "isEmpty(rbs_test)"
+                  }
+                }
+              },
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "label": "FBS (mg/dL):",
+              "id": "fbs_test",
+              "type": "obs",
+              "questionOptions": {
+                "concept": "160912AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [],
+                "rendering": "number",
+                "max": "50",
+                "min": "0",
+                "showDate": "true",
+                "shownDateOptions": {
+                  "validators": [
+                    {
+                      "type": "date"
+                    },
+                    {
+                      "type": "js_expression",
+                      "failsWhenExpression": "!isEmpty(fbs_test) && isEmpty(myValue)",
+                      "message": "Date is result is required."
+                    }
+                  ],
+                  "hde": {
+                    "hideWhenExpression": "isEmpty(fbs_test)"
+                  }
+                }
+              }
+            },
+            {
+              "label": "HbA1C %:",
+              "id": "a1c_test",
+              "type": "obs",
+              "questionOptions": {
+                "concept": "159644AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [],
+                "rendering": "number",
+                "max": "20",
+                "min": "0",
+                "showDate": "true",
+                "shownDateOptions": {
+                  "validators": [
+                    {
+                      "type": "date"
+                    },
+                    {
+                      "type": "js_expression",
+                      "failsWhenExpression": "!isEmpty(a1c_test) && isEmpty(myValue)",
+                      "message": "Date is result is required."
+                    }
+                  ],
+                  "hde": {
+                    "hideWhenExpression": "isEmpty(a1c_test)"
+                  }
+                }
+              }
+            },
+            {
+              "label": "LDL mmol/L:",
+              "id": "ldl_test",
+              "type": "obs",
+              "questionOptions": {
+                "concept": "1008AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [],
+                "rendering": "number",
+                "max": "75",
+                "min": "0",
+                "showDate": "true",
+                "shownDateOptions": {
+                  "validators": [
+                    {
+                      "type": "date"
+                    },
+                    {
+                      "type": "js_expression",
+                      "failsWhenExpression": "!isEmpty(ldl_test) && isEmpty(myValue)",
+                      "message": "Date is result is required."
+                    }
+                  ],
+                  "hde": {
+                    "hideWhenExpression": "isEmpty(ldl_test)"
+                  }
+                }
+              }
+            },
+            {
+              "label": "HDL mmol/L:",
+              "id": "hdl_test",
+              "type": "obs",
+              "questionOptions": {
+                "concept": "1007AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [],
+                "rendering": "number",
+                "max": "15",
+                "min": "0",
+                "showDate": "true",
+                "shownDateOptions": {
+                  "validators": [
+                    {
+                      "type": "date"
+                    },
+                    {
+                      "type": "js_expression",
+                      "failsWhenExpression": "!isEmpty(hdl_test) && isEmpty(myValue)",
+                      "message": "Date is result is required."
+                    }
+                  ],
+                  "hde": {
+                    "hideWhenExpression": "isEmpty(hdl_test)"
+                  }
+                }
+              }
+            },
+            {
+              "label": "TG mmol/L:",
+              "id": "tg_test",
+              "type": "obs",
+              "questionOptions": {
+                "concept": "1009AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [],
+                "rendering": "number",
+                "max": "55",
+                "min": "0",
+                "showDate": "true",
+                "shownDateOptions": {
+                  "validators": [
+                    {
+                      "type": "date"
+                    },
+                    {
+                      "type": "js_expression",
+                      "failsWhenExpression": "!isEmpty(tg_test) && isEmpty(myValue)",
+                      "message": "Date is result is required."
+                    }
+                  ],
+                  "hde": {
+                    "hideWhenExpression": "isEmpty(tg_test)"
+                  }
+                }
+              }
+            },
+            {
+              "label": "Cholesterol mmol/L:",
+              "id": "chol_test",
+              "type": "obs",
+              "questionOptions": {
+                "concept": "1006AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [],
+                "rendering": "number",
+                "max": "100",
+                "min": "0",
+                "showDate": "true",
+                "shownDateOptions": {
+                  "validators": [
+                    {
+                      "type": "date"
+                    },
+                    {
+                      "type": "js_expression",
+                      "failsWhenExpression": "!isEmpty(chol_test) && isEmpty(myValue)",
+                      "message": "Date is result is required."
+                    }
+                  ],
+                  "hde": {
+                    "hideWhenExpression": "isEmpty(chol_test)"
+                  }
+                }
+              }
+            },
+            {
+              "label": "Microalbumin test, urine mg/L:",
+              "id": "microAlb_test",
+              "type": "obs",
+              "questionOptions": {
+                "concept": "164948AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [],
+                "rendering": "number",
+                "max": "300",
+                "min": "30",
+                "showDate": "true",
+                "shownDateOptions": {
+                  "validators": [
+                    {
+                      "type": "date"
+                    },
+                    {
+                      "type": "js_expression",
+                      "failsWhenExpression": "!isEmpty(microAlb_test) && isEmpty(myValue)",
+                      "message": "Date is result is required."
+                    }
+                  ],
+                  "hde": {
+                    "hideWhenExpression": "isEmpty(microAlb_test)"
+                  }
+                }
+              }
+            },
+            {
+              "label": "Urea mmol/L:",
+              "id": "urea_test",
+              "type": "obs",
+              "questionOptions": {
+                "concept": "163699AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [],
+                "rendering": "number",
+                "max": "200",
+                "min": "10",
+                "showDate": "true",
+                "shownDateOptions": {
+                  "validators": [
+                    {
+                      "type": "date"
+                    },
+                    {
+                      "type": "js_expression",
+                      "failsWhenExpression": "!isEmpty(urea_test) && isEmpty(myValue)",
+                      "message": "Date is result is required."
+                    }
+                  ],
+                  "hde": {
+                    "hideWhenExpression": "isEmpty(urea_test)"
+                  }
+                }
+              },
+              "questionInfo": "Allows decimals"
+            }
+          ]
+        },
+        {
+          "label": "CBC",
+          "questions": [
+            {
+              "label": "Hgb g/dL:",
+              "id": "hgbgdl_test",
+              "questionOptions": {
+                "concept": "21AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "50",
+                "min": "0",
+                "showDate": "true",
+                "rendering": "number",
+                "shownDateOptions": {
+                  "validators": [
+                    {
+                      "type": "date"
+                    },
+                    {
+                      "type": "js_expression",
+                      "failsWhenExpression": "!isEmpty(hgbgdl_test) && isEmpty(myValue)",
+                      "message": "Date is result is required."
+                    }
+                  ],
+                  "hide": {
+                    "hideWhenExpression": "isEmpty(hgbgdl_test)"
+                  }
+                }
+              },
+              "type": "obs",
+              "validators": []
+            },
+            {
+              "label": "WBC/mm3:",
+              "id": "testWBCmm",
+              "questionOptions": {
+                "concept": "678AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "500",
+                "min": "0",
+                "showDate": "true",
+                "shownDateOptions": {
+                  "validators": [
+                    {
+                      "type": "date"
+                    },
+                    {
+                      "type": "js_expression",
+                      "failsWhenExpression": "!isEmpty(testWBCmm) && isEmpty(myValue)",
+                      "message": "Date is result is required."
+                    }
+                  ],
+                  "hide": {
+                    "hideWhenExpression": "isEmpty(testWBCmm)"
+                  }
+                },
+                "rendering": "number"
+              },
+              "type": "obs",
+              "validators": []
+            },
+            {
+              "type": "obs",
+              "label": "Platelets:",
+              "id": "platelets_test",
+              "questionOptions": {
+                "concept": "729AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "rendering": "number",
+                "max": "450000",
+                "min": "0",
+                "showDate": "true",
+                "shownDateOptions": {
+                  "validators": [
+                    {
+                      "type": "date"
+                    },
+                    {
+                      "type": "js_expression",
+                      "failsWhenExpression": "!isEmpty(platelets_test) && isEmpty(myValue)",
+                      "message": "Date result is required."
+                    }
+                  ],
+                  "hide": {
+                    "hideWhenExpression": "isEmpty(platelets_test)"
+                  }
+                }
+              },
+              "validators": [],
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "label": "ALC/ mm3:",
+              "id": "alcmm_test",
+              "questionOptions": {
+                "concept": "1021AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "500",
+                "min": "0",
+                "showDate": "true",
+                "rendering": "number",
+                "shownDateOptions": {
+                  "historicalExpression": "HD.getObject('prevEnc').getValue('1021AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA.1021AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA')",
+                  "validators": [
+                    {
+                      "type": "date"
+                    },
+                    {
+                      "type": "js_expression",
+                      "failsWhenExpression": "!isEmpty(alcmm_test) && isEmpty(myValue)",
+                      "message": "Date is result is required."
+                    }
+                  ],
+                  "hide": {
+                    "hideWhenExpression": "isEmpty(alcmm_test)"
+                  }
+                }
+              },
+              "type": "obs",
+              "validators": [],
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "label": "MCV:",
+              "id": "mcv_test",
+              "questionOptions": {
+                "concept": "851AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "500",
+                "min": "0",
+                "showDate": "true",
+                "rendering": "number",
+                "shownDateOptions": {
+                  "validators": [
+                    {
+                      "type": "date"
+                    },
+                    {
+                      "type": "js_expression",
+                      "failsWhenExpression": "!isEmpty(mcv_test) && isEmpty(myValue)",
+                      "message": "Date is result is required."
+                    }
+                  ],
+                  "hide": {
+                    "hideWhenExpression": "isEmpty(mcv_test)"
+                  }
+                }
+              },
+              "type": "obs",
+              "validators": [],
+              "questionInfo": "Allows decimals"
+            }
+          ]
+        },
+        {
+          "label": "Urinalysis",
+          "questions": [
+            {
+              "label": "Urinalysis:",
+              "type": "obsGroup",
+              "questionOptions": {
+                "id": "urinalysis",
+                "concept": "302AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "rendering": "group"
+              },
+              "questions": [
+                {
+                  "label": "Pus cells:",
+                  "id": "puscells_test",
+                  "type": "obs",
+                  "questionOptions": {
+                    "concept": "161484AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "rendering": "select",
+                    "answers": [
+                      {
+                        "concept": "664AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Negative"
+                      },
+                      {
+                        "concept": "703AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Positive (+)"
+                      },
+                      {
+                        "concept": "1363AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Strong positive (++)"
+                      },
+                      {
+                        "concept": "1364AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Stronger positive (+++)"
+                      }
+                    ]
+                  },
+                  "hide": {
+                    "hideWhenExpression": "visitTypeUuid !== '7b0f5697-27e3-40c4-8bae-f4049abfb4ed'"
+                  }
+                },
+                {
+                  "label": "Protein:",
+                  "type": "obs",
+                  "id": "protein_test",
+                  "questionOptions": {
+                    "concept": "1875AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "rendering": "select",
+                    "answers": [
+                      {
+                        "concept": "664AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Negative"
+                      },
+                      {
+                        "concept": "703AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Positive (+)"
+                      },
+                      {
+                        "concept": "1363AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Strong positive (++)"
+                      },
+                      {
+                        "concept": "1364AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Stronger positive (+++)"
+                      }
+                    ]
+                  },
+                  "hide": {
+                    "hideWhenExpression": "visitTypeUuid !== '7b0f5697-27e3-40c4-8bae-f4049abfb4ed'"
+                  }
+                },
+                {
+                  "label": "Leucocytes:",
+                  "type": "obs",
+                  "id": "leucocytes_test",
+                  "questionOptions": {
+                    "concept": "163684AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "rendering": "select",
+                    "answers": [
+                      {
+                        "concept": "664AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Negative"
+                      },
+                      {
+                        "concept": "703AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Positive (+)"
+                      },
+                      {
+                        "concept": "1363AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Strong positive (++)"
+                      },
+                      {
+                        "concept": "1364AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Stronger positive (+++)"
+                      }
+                    ]
+                  },
+                  "hide": {
+                    "hideWhenExpression": "visitTypeUuid !== '7b0f5697-27e3-40c4-8bae-f4049abfb4ed'"
+                  }
+                },
+                {
+                  "label": "Ketone:",
+                  "type": "obs",
+                  "id": "ketone_test",
+                  "questionOptions": {
+                    "concept": "161442AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "rendering": "select",
+                    "answers": [
+                      {
+                        "concept": "664AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Negative"
+                      },
+                      {
+                        "concept": "1362AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Positive (+)"
+                      },
+                      {
+                        "concept": "1363AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Strong positive (++)"
+                      },
+                      {
+                        "concept": "1364AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Stronger positive (+++)"
+                      }
+                    ]
+                  },
+                  "hide": {
+                    "hideWhenExpression": "visitTypeUuid !== '7b0f5697-27e3-40c4-8bae-f4049abfb4ed'"
+                  }
+                },
+                {
+                  "label": "Glucose:",
+                  "id": "sugar_test",
+                  "type": "obs",
+                  "questionOptions": {
+                    "concept": "159734AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "rendering": "select",
+                    "answers": [
+                      {
+                        "concept": "664AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Negative"
+                      },
+                      {
+                        "concept": "703AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Positive (+)"
+                      },
+                      {
+                        "concept": "1363AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Strong positive (++)"
+                      },
+                      {
+                        "concept": "1364AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Stronger positive (+++)"
+                      }
+                    ]
+                  },
+                  "hide": {
+                    "hideWhenExpression": "visitTypeUuid !== '7b0f5697-27e3-40c4-8bae-f4049abfb4ed'"
+                  }
+                },
+                {
+                  "label": "Nitrites:",
+                  "id": "nitrites_test",
+                  "type": "obs",
+                  "questionOptions": {
+                    "concept": "161440AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "rendering": "select",
+                    "answers": [
+                      {
+                        "concept": "664AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Negative"
+                      },
+                      {
+                        "concept": "1874AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Positive (+)"
+                      },
+                      {
+                        "concept": "1363AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Strong positive (++)"
+                      },
+                      {
+                        "concept": "1364AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                        "label": "Stronger positive (+++)"
+                      }
+                    ]
+                  },
+                  "hide": {
+                    "hideWhenExpression": "visitTypeUuid !== '7b0f5697-27e3-40c4-8bae-f4049abfb4ed'"
+                  }
+                }
+              ],
+              "id": "__wKHo8FDro"
+            }
+          ]
+        },
+        {
+          "label": "Blood Grouping",
+          "questions": [
+            {
+              "label": "Blood type:",
+              "id": "bloodGroup_test",
+              "questionOptions": {
+                "concept": "300AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [
+                  {
+                    "concept": "690AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "A positive"
+                  },
+                  {
+                    "concept": "692AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "A negative"
+                  },
+                  {
+                    "concept": "694AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "B positive"
+                  },
+                  {
+                    "concept": "696AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "B negative"
+                  },
+                  {
+                    "concept": "699AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "O positive"
+                  },
+                  {
+                    "concept": "701AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "O negative"
+                  },
+                  {
+                    "concept": "1230AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "AB positive"
+                  },
+                  {
+                    "concept": "1231AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "AB negative"
+                  },
+                  {
+                    "concept": "33bc1cf5-4ae5-49ba-9afd-bcbb9f7b09e5",
+                    "label": "A"
+                  },
+                  {
+                    "concept": "01e7f790-a8fc-40e9-968f-c9d79924eb6d",
+                    "label": "B"
+                  },
+                  {
+                    "concept": "0feab44f-6777-4c4b-a3ed-a3502f996fcb",
+                    "label": "AB"
+                  },
+                  {
+                    "concept": "bf9a31dc-5db4-49c2-aad2-30ec16315b24",
+                    "label": "O"
+                  }
+                ],
+                "showDate": "true",
+                "rendering": "select",
+                "shownDateOptions": {
+                  "validators": [
+                    {
+                      "type": "date"
+                    },
+                    {
+                      "type": "js_expression",
+                      "failsWhenExpression": "!isEmpty(bloodGroup_test) && isEmpty(myValue)",
+                      "message": "Date result is required."
+                    }
+                  ],
+                  "hide": {
+                    "hideWhenExpression": "isEmpty(bloodGroup_test)"
+                  }
+                }
+              },
+              "type": "obs",
+              "validators": []
+            }
+          ]
+        },
+        {
+          "label": "Chest Xray",
+          "questions": [
+            {
+              "label": "CXR code:",
+              "id": "cxrcode_test",
+              "questionOptions": {
+                "concept": "12AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [
+                  {
+                    "concept": "1115AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Normal"
+                  },
+                  {
+                    "concept": "5158AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Cardiomegaly"
+                  },
+                  {
+                    "concept": "6052AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Cavitary"
+                  },
+                  {
+                    "concept": "6050AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Diffuse abn/non-miliary"
+                  },
+                  {
+                    "concept": "6049AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Infiltrate"
+                  },
+                  {
+                    "concept": "1137AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Miliary"
+                  },
+                  {
+                    "concept": "114108AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "PI effusion"
+                  },
+                  {
+                    "concept": "5622AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Other"
+                  }
+                ],
+                "showDate": "true",
+                "rendering": "select",
+                "shownDateOptions": {
+                  "validators": [
+                    {
+                      "type": "date"
+                    },
+                    {
+                      "type": "js_expression",
+                      "failsWhenExpression": "!isEmpty(cxrcode_test) && isEmpty(myValue)",
+                      "message": "Date is result is required."
+                    }
+                  ],
+                  "hide": {
+                    "hideWhenExpression": "isEmpty(cxrcode_test)"
+                  }
+                }
+              },
+              "type": "obs",
+              "validators": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Assessment",
+      "sections": [
+        {
+          "label": "Clinical Notes",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "label": "Please enter the clinical notes below:",
+              "type": "obs",
+              "id": "assNote",
+              "default": "",
+              "questionOptions": {
+                "concept": "fa8fedc0-c066-4da3-8dc1-2ad8621fc480",
+                "rendering": "textarea",
+                "rows": 5
+              }
+            }
+          ]
+        },
+        {
+          "label": "Focused Physical Exam",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "162737AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [
+                  {
+                    "concept": "125201AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Swelling of Skin"
+                  },
+                  {
+                    "concept": "0ac7cf63-2039-44c0-84db-3f8f34a6b46f",
+                    "label": "Redness"
+                  },
+                  {
+                    "concept": "132681AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Normal Appearance"
+                  },
+                  {
+                    "concept": "ab0ff763-8f2e-427d-81d4-fccc337fb356",
+                    "label": "Necrosis"
+                  }
+                ]
+              },
+              "id": "skinAppearence",
+              "label": "Skin Appearence"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "163894AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [
+                  {
+                    "concept": "1066AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "No"
+                  },
+                  {
+                    "concept": "1065AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Yes"
+                  }
+                ]
+              },
+              "id": "swellingEdema",
+              "label": "Swelling/Edema"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "05b558bf-89cb-44f6-8a17-79a09b30ca90",
+                "answers": [
+                  {
+                    "concept": "163747AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Absent"
+                  },
+                  {
+                    "concept": "163748AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Present"
+                  }
+                ]
+              },
+              "id": "painTenderness",
+              "label": "Pain/Tenderness"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "10880914-ece9-40c0-ac6d-9e51db5e1069",
+                "max": "100",
+                "min": "0"
+              },
+              "id": "granulationTissue",
+              "label": "Granulation Tissue",
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "e4e8a173-6c32-44fd-9c39-ffe91c9402e9"
+              },
+              "id": "necroticTissue",
+              "label": "Necrotic Tissue"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "c9d9ae52-720b-454a-832c-427f2c2f2e36",
+                "answers": [
+                  {
+                    "concept": "142451AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Diabetic foot ulcer"
+                  },
+                  {
+                    "concept": "5622AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Other"
+                  },
+                  {
+                    "concept": "0c0d2403-3c29-4a5b-96d3-79d7e5c5954b",
+                    "label": "Venous stasis ulcer of leg"
+                  }
+                ]
+              },
+              "id": "typeOfWound",
+              "label": "Type of Wound"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "4ed07c2d-13f4-4531-bf5a-084d74322fe8"
+              },
+              "id": "woundLocation",
+              "label": "Wound location"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "fa8fedc0-c066-4da3-8dc1-2ad8621fc480"
+              },
+              "id": "examNotes",
+              "label": "Exam Notes"
+            }
+          ]
+        },
+        {
+          "label": "Dorsalis Pedis Pulse",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "checkbox",
+                "concept": "b2f1fcc6-95d1-48f9-91c9-9f10e3fbbacd",
+                "answers": [
+                  {
+                    "concept": "163748AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Present"
+                  },
+                  {
+                    "concept": "163747AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Absent"
+                  }
+                ]
+              },
+              "id": "right",
+              "label": "Right Present"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "checkbox",
+                "concept": "34e9cbf3-8ff2-47b0-9591-62c58a687966",
+                "answers": [
+                  {
+                    "concept": "163748AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Present"
+                  },
+                  {
+                    "concept": "163747AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Absent"
+                  }
+                ]
+              },
+              "id": "leftPresent ",
+              "label": "Left Present"
+            }
+          ]
+        },
+        {
+          "label": "Wound dimensions",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "02ce67eb-be1a-4f25-9317-8f91e0fcfdab"
+              },
+              "id": "woundDimenstions",
+              "label": "Length (cm)",
+              "questionInfo": "Allow decimals"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "8753c8ff-08a7-4fe9-a17f-db88a3196254"
+              },
+              "id": "woundWidth",
+              "label": "Wound width (cm)",
+              "questionInfo": "Allow decimals"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "bbf10f7e-d1d3-447f-89a0-0edb5aa58c5d"
+              },
+              "id": "woundDepth",
+              "label": "Depth (cm)",
+              "questionInfo": "Allow decimals"
+            }
+          ]
+        },
+        {
+          "label": "Exudate",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "f1163eff-384c-4377-8476-8170b4d8d575",
+                "answers": [
+                  {
+                    "concept": "56d7a431-b074-4416-97d4-39d57e15c196",
+                    "label": "Heavy"
+                  },
+                  {
+                    "concept": "1499AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Moderate"
+                  },
+                  {
+                    "concept": "1107AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "None"
+                  },
+                  {
+                    "concept": "da959908-ba99-45f4-ab45-b2320b02d8e9",
+                    "label": "Scant or minimal"
+                  }
+                ]
+              },
+              "id": "exudateAmount",
+              "label": "Exudate Amount"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "6a7956d4-87bc-45c7-8ed3-d85fac2c2980",
+                "answers": [
+                  {
+                    "concept": "ad06c21b-c81e-43d8-a82e-e38b7a838f4b",
+                    "label": "Serous"
+                  },
+                  {
+                    "concept": "af89dfab-f433-48d3-8ca1-4f705922977a",
+                    "label": "Serosanguineous"
+                  },
+                  {
+                    "concept": "0db1f8ce-575a-43bf-9fca-58c4155d7e94",
+                    "label": "Purulent"
+                  }
+                ]
+              },
+              "id": "exudateConsistency",
+              "label": "Exudate Consistency"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Wound Treatment",
+      "sections": [
+        {
+          "label": "Treatment",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "521015e5-bd67-4a2d-a424-20f471abc2e7",
+                "answers": [
+                  {
+                    "concept": "ca7a9d22-cfc9-4c60-90af-17bf70699ea7",
+                    "label": "Chlorhexidine gluconate 4% soap solution"
+                  },
+                  {
+                    "concept": "3f26398a-b656-4dff-bcca-a5d311af972b",
+                    "label": "7.5% povidone iodine soap solution"
+                  },
+                  {
+                    "concept": "186d438e-98a2-4955-92dd-20781ff6ef1a",
+                    "label": "Normal saline"
+                  }
+                ]
+              },
+              "id": "cleansingMethod",
+              "label": "Cleansing Method"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "d8a8bd64-b61e-4c44-b35d-400acea45de8",
+                "answers": [
+                  {
+                    "concept": "a61fdf04-d702-4773-ada1-a330557782ce",
+                    "label": "Absorbent dressing"
+                  },
+                  {
+                    "concept": "855e85cb-dd1b-41b6-b43e-108890498214",
+                    "label": "Aquacel AG"
+                  },
+                  {
+                    "concept": "0a1d2888-fd53-4031-9470-ca2140f997a9",
+                    "label": "Calcium Alginate"
+                  },
+                  {
+                    "concept": "5622AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Other"
+                  },
+                  {
+                    "concept": "26eafc63-b224-4b57-afb9-55c7c4a7686e",
+                    "label": "Silver Alginate"
+                  },
+                  {
+                    "concept": "3cd10bf0-26fe-102b-80cb-0017a47871b2",
+                    "label": "Wound dressing"
+                  }
+                ]
+              },
+              "id": "primaryDressing",
+              "label": "Primary Dressing"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "851b51a9-61e2-4dd1-8cf3-c1537c6d1b48",
+                "answers": [
+                  {
+                    "concept": "fe792056-6904-4638-b0e3-c49c1400288b",
+                    "label": "Unna Boot"
+                  },
+                  {
+                    "concept": "5622AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Other"
+                  },
+                  {
+                    "concept": "eed2a145-8f98-4f93-b6f9-2d5c79931238",
+                    "label": "off loading"
+                  },
+                  {
+                    "concept": "1f1866b5-aa32-48e3-8b3a-0c5f3c621e6b",
+                    "label": "Non-adhesive Gauze"
+                  },
+                  {
+                    "concept": "9a2e20ba-4d72-410f-823a-462b19bcbe0d",
+                    "label": "Kerlix"
+                  },
+                  {
+                    "concept": "c34a64e6-c566-4b15-bd7f-189cb46151d8",
+                    "label": "Abdominal Dressing"
+                  }
+                ]
+              },
+              "id": "secondaryDressing",
+              "label": "Secondary Dressing"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "badd0cdf-a4f0-4adb-b11f-e5cfa8b7b0d2",
+                "answers": [
+                  {
+                    "concept": "8bda3a3f-505e-4da2-a825-750e4c480402",
+                    "label": "Elastic Ace bandage"
+                  },
+                  {
+                    "concept": "2cb7bc56-914f-40f8-9c95-ed01150180e6",
+                    "label": "Compression Dressing"
+                  }
+                ]
+              },
+              "id": "securingMethod",
+              "label": "Securing Method"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "fa8fedc0-c066-4da3-8dc1-2ad8621fc480"
+              },
+              "id": "additionaTreatmentNotes",
+              "label": "Additional Notes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Attachments",
+      "sections": [
+        {
+          "label": "Update photographs of Wounds",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "file",
+                "concept": "7cac8397-53cd-4f00-a6fe-028e8d743f8e"
+              },
+              "id": "woundAttachments",
+              "label": "Upload wound Images"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Education",
+      "sections": [
+        {
+          "label": "Education Provided",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "checkbox",
+                "concept": "e2124576-e65b-4f5b-a356-45bba1555a5c",
+                "answers": [
+                  {
+                    "concept": "0f609ab8-cb0f-4b94-b499-eb19a2b98151",
+                    "label": "Education on signs and symptoms of infection"
+                  },
+                  {
+                    "concept": "88cff842-983e-4c72-bb4e-115f8c35e521",
+                    "label": "Education on importance of smoking cessation"
+                  },
+                  {
+                    "concept": "38ee80b9-4fe9-4bec-a41b-c10cc9aec195",
+                    "label": "Education on glucose control and diabetic diet"
+                  },
+                  {
+                    "concept": "03724124-bdeb-4771-b729-95f0ca5ca87a",
+                    "label": "Education on adherence to wound protocols as previously discussed."
+                  }
+                ]
+              },
+              "id": "educationProvided",
+              "label": "Education Provided"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "fa8fedc0-c066-4da3-8dc1-2ad8621fc480"
+              },
+              "id": "additionalNotes",
+              "label": "Additional Notes"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

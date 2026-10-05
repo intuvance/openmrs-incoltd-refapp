@@ -1,0 +1,54 @@
+<config>
+    <!--
+        OpenConceptLab (OCL) configuration for the Intuvance site configuration layer.
+
+        Design intent (see the distribution README, section "CIEL / OCL"):
+
+        * Terminology is expected to already be present in the database. It is supplied
+          by the pre-populated database image and by the official
+          org.openmrs.content:referenceapplication core content package. OCL is therefore
+          NOT used as a first-boot bootstrap mechanism.
+
+        * `openconceptlab.subscriptionUrl` is deliberately NOT set here. In
+          openconceptlab 3.1.0 an unset subscription URL means `getSubscription()`
+          returns null, `UpdateScheduler` schedules nothing, and no remote terminology
+          fetch is ever attempted. This is what keeps OpenMRS startup from blocking on
+          a large (multi-hour) remote import, and what keeps the distribution usable
+          when external terminology services are unreachable.
+
+        * `openconceptlab.scheduledDays` and `openconceptlab.scheduledTime` are pinned to
+          disabled values. Even if a site later configures a subscription (for example
+          through the OCL admin OWA or a deployment-specific overlay content package),
+          no periodic import will be scheduled from this baseline.
+
+        * No authentication token is committed. `openconceptlab.token` is a secret and
+          must be supplied by the deployment, never by this repository.
+
+        To opt in to a *self-hosted, authenticated* OCL, set the following as
+        deployment configuration (e.g. an overlay content package, or the OCL admin OWA):
+
+            openconceptlab.subscriptionUrl = https://api.ocls.example.org/users/<user>/collections/<collection>
+            openconceptlab.token          = <subscriber token>
+
+        Note that the OCL client sends the token as an `Authorization: Token <token>`
+        header, and drops it across redirects. Always use the `api.` host directly.
+    -->
+    <globalProperties>
+        <globalProperty>
+            <property>openconceptlab.scheduledDays</property>
+            <value>0</value>
+        </globalProperty>
+        <globalProperty>
+            <property>openconceptlab.scheduledTime</property>
+            <value></value>
+        </globalProperty>
+        <globalProperty>
+            <property>openconceptlab.subscribedToSnapshot</property>
+            <value>false</value>
+        </globalProperty>
+        <globalProperty>
+            <property>openconceptlab.validationType</property>
+            <value>FULL</value>
+        </globalProperty>
+    </globalProperties>
+</config>

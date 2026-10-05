@@ -1,0 +1,253 @@
+# ---------------------------------------------------------------------------
+# Build the pre-populated, demo-free database seed image.
+#
+# Why this exists
+#   The distribution must start from a database that already contains CIEL and the
+#   core metadata that O3, order entry and the standard modules reference by
+#   hard-coded UUID, without performing a large terminology download on first
+#   startup. The upstream openmrs/openmrs-reference-application-3-db:nightly-with-data
+#   image provides that, but it is a nightly docker commit of the dev3 line, is
+#   amd64-only, pins nothing, ships demo clinical data and a publicly known
+#   database password.
+#
+#   This workflow takes that image, strips the demo data, exports a logical dump,
+#   and republishes it against the tag of the commit that built it. Database and
+#   backend therefore always come from the same release line.
+#
+# Triggers
+#   workflow_dispatch  build on demand
+#   push to main       rebuild the :main seed
+#   schedule           nightly, to pick up upstream terminology changes
+# ---------------------------------------------------------------------------
+name: Build pre-populated database seed
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  schedule:
+    # 03:17 UTC daily
+    - cron: "17 3 * * *"
+
+permissions:
+  contents: read
+  packages: write
+
+env:
+  # The upstream pre-populated image this seed is derived from. Pinned by digest:
+  # `nightly-with-data` is a mutable tag that is overwritten on every upstream
+  # `main` build, so a tag reference here would make this workflow irreproducible.
+  UPSTREAM_SEED_IMAGE: openmrs/openmrs-reference-application-3-db@sha256:fd11853c83288e75129856302f52dce218fd539b080e753b32c9f9a7083d330a
+  SEED_REGISTRY: ghcr.io/${{ github.repository_owner }}
+
+jobs:
+  build-seed:
+    name: Build and push the sanitised database seed
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve the seed tag from the distribution version
+        id: version
+        run: |
+          # Take the version from the root pom so the seed can never drift from
+          # the backend it is paired with.
+          VERSION=$(mvn -B -q -Dexec.executable=echo \
+            -Dexec.args='${project.version}' -DforceStdout help:evaluate \
+            | tail -1 | tr -d '[:space:]')
+          if [ -z "${VERSION}" ] || [ "${VERSION}" = "${project.version}" ]; then
+            echo "::error::could not resolve project.version from the root pom"
+            exit 1
+          fi
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
+          echo "Seeding with the metadata for distribution ${VERSION}"
+
+      # Start the upstream pre-populated image, then purge demo clinical data
+      # from the live database rather than from a dump, so the purge is verified
+      # against real data before anything is exported.
+      - name: Start the upstream pre-populated database
+        run: |
+          docker run -d --name seed-source \
+            -e MYSQL_ROOT_PASSWORD=openmrs \
+            "$UPSTREAM_SEED_IMAGE"
+          # Wait by connecting as the seed image's own application account.
+          # The image's healthcheck.sh connects as passwordless root, which does
+          # not work here: the datadir is pre-initialised, so MYSQL_ROOT_PASSWORD
+          # is ignored and root has the password baked into the image layer.
+          for i in $(seq 1 60); do
+            if docker exec seed-source mariadb -uopenmrs -popenmrs openmrs -e "SELECT 1" \
+                 >/dev/null 2>&1; then
+              echo "database is up"; exit 0
+            fi
+            sleep 2
+          done
+          echo "::error::the upstream pre-populated database never became healthy"
+          docker logs seed-source
+          exit 1
+
+      - name: Purge demo clinical data
+        run: |
+          # This is the script that ships in the seed image, so the artifact and
+          # the tool that produced it can never diverge.
+          #
+          # Two details are load-bearing:
+          #   * `-i` forwards stdin. Without it `docker exec` discards the
+          #     redirect and the script silently never runs.
+          #   * the `openmrs` schema argument is required, because the script
+          #     qualifies its information_schema lookups with DATABASE().
+          set -o pipefail
+          docker cp deployment/db/purge-demo-data.sql seed-source:/tmp/purge.sql
+          docker exec -i seed-source \
+            mariadb -uopenmrs -popenmrs openmrs < deployment/db/purge-demo-data.sql \
+            | tee purge-output.txt
+
+      - name: Verify the purge preserved core metadata
+        run: |
+          set -o pipefail
+          read -r CONCEPTS CRM LOCATIONS VISIT_TYPES ENC_TYPES DRUGS OBS PERSONS ADMINS DAEMONS <<<"$(docker exec \
+            seed-source mariadb -N -B -uopenmrs -popenmrs openmrs -e "
+              SELECT (SELECT COUNT(*) FROM concept),
+                     (SELECT COUNT(*) FROM concept_reference_map),
+                     (SELECT COUNT(*) FROM location),
+                     (SELECT COUNT(*) FROM visit_type),
+                     (SELECT COUNT(*) FROM encounter_type),
+                     (SELECT COUNT(*) FROM drug),
+                     (SELECT COUNT(*) FROM obs),
+                     (SELECT COUNT(*) FROM person),
+                     (SELECT COUNT(*) FROM users WHERE username = 'admin'),
+                     (SELECT COUNT(*) FROM users WHERE username = 'daemon');")"
+
+          fail=0
+          # Demo data must be gone.
+          [ "${OBS}" -eq 0 ]      || { echo "::error::obs not purged (${OBS})"; fail=1; }
+          [ "${PERSONS}" -le 2 ]  || { echo "::error::demo persons remain (${PERSONS})"; fail=1; }
+          # Core metadata must be present. These are the thresholds that matter:
+          # hard-coded concept UUIDs used by O3 and order entry reference CIEL
+          # mappings, so an empty concept_reference_map means a broken install.
+          [ "${CONCEPTS}" -gt 3000 ] || { echo "::error::too few concepts (${CONCEPTS})"; fail=1; }
+          [ "${CRM}" -gt 3000 ]      || { echo "::error::too few concept mappings (${CRM})"; fail=1; }
+          [ "${LOCATIONS}" -gt 0 ]   || { echo "::error::no locations"; fail=1; }
+          [ "${VISIT_TYPES}" -gt 0 ] || { echo "::error::no visit types"; fail=1; }
+          [ "${ENC_TYPES}" -gt 0 ]   || { echo "::error::no encounter types"; fail=1; }
+          [ "${DRUGS}" -gt 0 ]       || { echo "::error::no drugs"; fail=1; }
+          # The system users must survive. The daemon user owns the metadata
+          # audit trail -- it is the creator of ~4400 concepts, every location
+          # and every person -- so a seed without it restores cleanly and then
+          # fails at OpenMRS startup with FetchNotFoundException on every
+          # metadata read. This is the assertion that would have caught it.
+          [ "${ADMINS}"  -eq 1 ] || { echo "::error::admin superuser missing (${ADMINS})"; fail=1; }
+          [ "${DAEMONS}" -eq 1 ] || { echo "::error::daemon system user missing (${DAEMONS})"; fail=1; }
+          [ "${fail}" -eq 0 ] || exit 1
+
+          {
+            echo "### Database seed contents"
+            echo
+            echo "| metric | value |"
+            echo "|---|---|"
+            echo "| concepts | ${CONCEPTS} |"
+            echo "| concept reference mappings (CIEL) | ${CRM} |"
+            echo "| locations | ${LOCATIONS} |"
+            echo "| visit types | ${VISIT_TYPES} |"
+            echo "| encounter types | ${ENC_TYPES} |"
+            echo "| drugs | ${DRUGS} |"
+            echo "| observations (must be 0) | ${OBS} |"
+            echo "| persons (must be <= 2, the system users) | ${PERSONS} |"
+            echo "| admin superuser (must be 1) | ${ADMINS} |"
+            echo "| daemon system user (must be 1) | ${DAEMONS} |"
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Export the sanitised dump
+        run: |
+          # mysqldump must run INSIDE the source container. The upstream image has
+          # no volume: its datadir lives in the container's own filesystem, so
+          # `--volumes-from` yields an empty server and mysqldump cannot connect.
+          #
+          # --single-transaction gives a consistent snapshot without stopping the
+          # server, so no clean shutdown is needed.
+          #
+          # Only the openmrs schema: the seed image's account has privileges on
+          # that schema alone, so --all-databases (or --routines/--events) would
+          # emit permission errors. OpenMRS uses no stored routines or events.
+          for i in $(seq 1 60); do
+            docker exec seed-source mariadb -uopenmrs -popenmrs openmrs -e "SELECT 1" \
+              >/dev/null 2>&1 && break
+            sleep 2
+          done
+
+          docker exec seed-source \
+            mysqldump --no-tablespaces --single-transaction --triggers \
+                      -uopenmrs -popenmrs openmrs \
+            > deployment/db/seed.sql
+          docker rm -f seed-source
+
+          test -s deployment/db/seed.sql || { echo "::error::empty seed dump"; exit 1; }
+          echo "dump size: $(du -h deployment/db/seed.sql | cut -f1)"
+
+      - name: Sanity-check the dump
+        run: |
+          set -o pipefail
+          # A dump that does not round-trip is worse than no dump at all.
+          docker run -d --name verify \
+            -e MYSQL_ROOT_PASSWORD=verify -e MYSQL_DATABASE=openmrs \
+            mariadb:10.11.7
+          for i in $(seq 1 60); do
+            docker exec verify healthcheck.sh --connect --innodb_initialized >/dev/null 2>&1 && break
+            sleep 2
+          done
+          mariadb --version >/dev/null
+          if command -v mariadb >/dev/null 2>&1; then
+            mariadb -h 127.0.0.1 -P 3306 -u root -pverify < deployment/db/seed.sql
+          else
+            apt-get update -qq && apt-get install -y -qq default-mysql-client >/dev/null
+            mariadb -h 127.0.0.1 -P 3306 -u root -pverify < deployment/db/seed.sql
+          fi
+          echo "restored into a clean database; concepts: $(docker exec verify \
+            mariadb -N -B -uroot -pverify -e 'SELECT COUNT(*) FROM openmrs.concept')"
+          docker rm -f verify
+
+      - name: Build the seed image
+        run: |
+          # The Dockerfile is rooted at deployment/db so the build context stays
+          # small; the workflow copies the dump in first.
+          docker build \
+            -f deployment/db/Dockerfile \
+            -t "${SEED_REGISTRY,,}/openmrs-db-seed:${{ steps.version.outputs.version }}" \
+            -t "${SEED_REGISTRY,,}/openmrs-db-seed:latest" \
+            deployment/db
+
+      - name: Log in to the container registry
+        if: github.event_name != 'schedule'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push the seed image
+        if: github.event_name != 'schedule'
+        uses: docker/build-push-action@v6
+        with:
+          context: deployment/db
+          push: true
+          tags: |
+            ${SEED_REGISTRY,,}/openmrs-db-seed:${{ steps.version.outputs.version }}
+            ${SEED_REGISTRY,,}/openmrs-db-seed:latest
+          provenance: false
+
+      - name: Publish the digest
+        if: github.event_name != 'schedule'
+        run: |
+          # Emit the digest so the version bump commit can pin it, rather than
+          # leaving the deployment to track a mutable tag.
+          DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' \
+            "${SEED_REGISTRY,,}/openmrs-db-seed:${{ steps.version.outputs.version }}" \
+            | cut -d@ -f2 || true)
+          {
+            echo "### Database seed published"
+            echo
+            echo "\`\`\`"
+            echo "OMRS_DB_SEED_IMAGE=${SEED_REGISTRY,,}/openmrs-db-seed@${DIGEST}"
+            echo "\`\`\`"
+          } >> "${GITHUB_STEP_SUMMARY}"
+          echo "OMRS_DB_SEED_IMAGE=${SEED_REGISTRY,,}/openmrs-db-seed@${DIGEST}" \
+            > seed-image.env

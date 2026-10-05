@@ -1,0 +1,33 @@
+# Local development override: build the stack images from this repository
+# instead of pulling them.
+#
+#   docker compose up --build
+#
+# The base docker-compose.yml pins every image by digest for reproducibility; this
+# override replaces the three application images with local builds of the same
+# sources. The database seed image is deliberately NOT overridden: it is a
+# prebuilt artifact, and rebuilding it requires booting a database, which is what
+# .github/workflows/build-db-seed.yml is for.
+
+services:
+  gateway:
+    image: ${OMRS_GATEWAY_IMAGE:-openmrs/openmrs-reference-application-3-gateway:local}
+    build:
+      context: ./gateway
+
+  frontend:
+    image: ${OMRS_FRONTEND_IMAGE:-openmrs/openmrs-reference-application-3-frontend:local}
+    build:
+      # Repository root, not ./frontend. The frontend image must ship the SITE's
+      # SPA config (the queue concept UUIDs, logo and brand colours), which lives
+      # in the content package rather than in frontend/. A ./frontend context
+      # cannot reach it, so the image would fall back to shipping a demo
+      # placeholder and the branding would silently not apply. frontend/
+      # Dockerfile copies it to the path the SPA is served from.
+      context: .
+      dockerfile: frontend/Dockerfile
+
+  backend:
+    image: ${OMRS_BACKEND_IMAGE:-openmrs/openmrs-reference-application-3-backend:local}
+    build:
+      context: .

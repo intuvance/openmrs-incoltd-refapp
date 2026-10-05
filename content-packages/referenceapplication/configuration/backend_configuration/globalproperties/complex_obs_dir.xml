@@ -1,0 +1,8 @@
+<config>
+	<globalProperties>
+		<globalProperty>
+			<property>obs.complex_obs_dir</property>
+			<value>data/complex_obs</value>
+		</globalProperty>
+	</globalProperties>
+</config>

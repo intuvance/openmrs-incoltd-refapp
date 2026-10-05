@@ -1,0 +1,78 @@
+# ---------------------------------------------------------------------------
+# Validate the site configuration content package.
+#
+# Runs on every change to the package. This is a fast gate that exists so that
+# metadata defects are caught here rather than surfacing as an OpenMRS startup
+# failure hours later, or -- worse -- as a concept that silently duplicates a CIEL
+# concept and is never picked up by O3.
+# ---------------------------------------------------------------------------
+name: Validate site configuration
+
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'content-packages/**'
+      - 'distro/**'
+      - 'tests/acceptance/validate-content-metadata.py'
+  pull_request:
+    paths:
+      - 'content-packages/**'
+      - 'distro/**'
+      - 'tests/acceptance/validate-content-metadata.py'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-content:
+    name: Validate content metadata and build the package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Validate content metadata
+        run: |
+          # Warnings do not fail the build: the clinical vocabulary is the site's
+          # decision. Malformed or duplicate UUIDs do, because the Initializer
+          # either aborts on them or creates unusable metadata.
+          python3 tests/acceptance/validate-content-metadata.py
+
+      - name: Validate the content package structure
+        run: mvn -B -q -Pdistro -pl content-packages,content-packages/referenceapplication install
+
+      - name: Confirm the package is wired into the distribution
+        run: |
+          # The site package is only useful if the distro actually references it.
+          # A package that builds but is not declared in distro.properties is
+          # silently ignored by OpenMRS, which is exactly the failure this
+          # distribution had before it was wired in.
+          for props in distro/distro.properties distro/distro-no-demo.properties; do
+            echo "== ${props}"
+            grep -q '^content.siteconfiguration=' "${props}" \
+              || { echo "::error::${props} does not reference the site content package"; exit 1; }
+            grep -q '^content.referenceapplication=' "${props}" \
+              || { echo "::error::${props} no longer references the official core content package"; exit 1; }
+            # The official core package must never be removed or replaced.
+            grep -q '^content.siteconfiguration.artifactId=' "${props}" \
+              || { echo "::error::${props} does not pin the site package artifactId"; exit 1; }
+            if grep -qE '^content\.siteconfiguration\.artifactId=referenceapplication$' "${props}"; then
+              echo "::error::the site package shares the official package's artifactId and would collide"
+              exit 1
+            fi
+            # The demo package must be absent from the production distro.
+            if [ "${props}" = "distro/distro-no-demo.properties" ]; then
+              if grep -q 'referenceapplication-demo' "${props}"; then
+                echo "::error::the demo content package is referenced by ${props}"
+                exit 1
+              fi
+              echo "demo package correctly excluded"
+            fi
+          done

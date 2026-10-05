@@ -1,0 +1,1445 @@
+{
+  "name": "Wound Assessment Form",
+  "uuid": "9f8f6def-8676-4e9f-b508-e2c85d86ee71",
+  "description": "Suubi EMR Initial wound care assessment form",
+  "version": "1.0",
+  "published": true,
+  "retired": false,
+  "encounter": "Wound Assessment",
+  "processor": "EncounterFormProcessor",
+  "encounterType": "b3217ef9-4a68-40e8-897c-487603de4302",
+  "referencedForms": [],
+  "pages": [
+    {
+      "label": "Encounter Details ",
+      "sections": [
+        {
+          "label": "Visit details ",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "encounterDatetime",
+              "questionOptions": {
+                "rendering": "datetime"
+              },
+              "id": "dateOfVisit",
+              "datePickerFormat": "both",
+              "label": "Date and time of Visit"
+            },
+            {
+              "type": "encounterProvider",
+              "questionOptions": {
+                "rendering": "ui-select-extended",
+                "isSearchable": false
+              },
+              "id": "provider",
+              "label": "Provider",
+              "required": true
+            },
+            {
+              "type": "encounterLocation",
+              "questionOptions": {
+                "rendering": "ui-select-extended",
+                "isSearchable": false
+              },
+              "id": "locationVisit",
+              "required": true,
+              "label": "Visit Location"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "162696AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [
+                  {
+                    "concept": "1065AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Yes"
+                  },
+                  {
+                    "concept": "1067AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Unknown"
+                  },
+                  {
+                    "concept": "1066AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "No"
+                  }
+                ]
+              },
+              "id": "consent",
+              "label": "Consent"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Vitals",
+      "sections": [
+        {
+          "label": "VItals Signs",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "5088AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "120.0",
+                "min": "25.0"
+              },
+              "id": "temperature",
+              "label": "Temperature (C):"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "5087AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "230",
+                "min": "0"
+              },
+              "id": "heartRate",
+              "label": "Pulse",
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "5085AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "250",
+                "min": "0"
+              },
+              "id": "systolicPressure",
+              "label": "Systolic blood pressure ",
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "5086AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "150",
+                "min": "0"
+              },
+              "id": "diastolicBloodPressure",
+              "label": "Diastolic blood pressure",
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "5242AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "99.0",
+                "min": "0"
+              },
+              "id": "respiratoryRate",
+              "label": "RR",
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "5092AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+              },
+              "id": "spo2",
+              "label": "SPO2"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "5089AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "250.0",
+                "min": "0"
+              },
+              "id": "weight",
+              "label": "Weight (kg)"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "5090AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "272.0",
+                "min": "10.0"
+              },
+              "id": "height",
+              "label": "Height (cm)"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "1342AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "100.0",
+                "min": "0",
+                "calculate": {
+                  "calculateExpression": "calcBMI(height,weight)"
+                }
+              },
+              "id": "bmi",
+              "label": "BMI"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "History",
+      "sections": [
+        {
+          "label": "HPI",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "c3a285db-fcbb-4ba1-b8af-d2622e7208e2"
+              },
+              "id": "hpi",
+              "label": "HPI"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "159367AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [
+                  {
+                    "concept": "1066AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "No"
+                  },
+                  {
+                    "concept": "1065AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Yes"
+                  },
+                  {
+                    "concept": "1067AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Unknown"
+                  }
+                ]
+              },
+              "id": "medicationHistory",
+              "label": "Currently taking medication?"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "165095AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+              },
+              "id": "pertinentLabs",
+              "label": "Pertinent Labs"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "160221AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+              },
+              "id": "pastMedication",
+              "label": "Failed wound treatments (Over the last 90 days)"
+            }
+          ]
+        },
+        {
+          "label": "Social History",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "42fabe36-67af-47dd-9b50-1b572f7256f4",
+                "answers": [
+                  {
+                    "concept": "34d06871-15cc-4423-bf79-15168789104a",
+                    "label": "Sodium"
+                  },
+                  {
+                    "concept": "80f4496d-6116-4a11-b6c4-f692c19e15b1",
+                    "label": "Protein"
+                  },
+                  {
+                    "concept": "08b04285-6378-408d-9906-b4982b34f755",
+                    "label": "Potassium"
+                  },
+                  {
+                    "concept": "703b8aa4-aa19-4dde-8a57-2da083e1ceec",
+                    "label": "Calories"
+                  }
+                ]
+              },
+              "id": "dietaryHabits",
+              "label": "Dietary Habits"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "165095AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+              },
+              "id": "notes",
+              "label": "Notes "
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "bbc51ddb-1abd-4349-96a0-633097f0cb7b",
+                "answers": [
+                  {
+                    "concept": "60c23381-a83e-48b5-8bfa-74520e0ec2bc",
+                    "label": "Daily"
+                  },
+                  {
+                    "concept": "1090AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Never"
+                  },
+                  {
+                    "concept": "fe5f8bd2-7e52-4084-bedb-8dfc369e3bae",
+                    "label": "Occasional"
+                  },
+                  {
+                    "concept": "86ba2390-448a-4dae-8cf9-5ce091a43cbb",
+                    "label": "Three times weekly"
+                  }
+                ]
+              },
+              "id": "exerciseFrequency",
+              "label": "Exercise/Frequency"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "2d2dc1b8-2dae-424e-8645-30296da6091a",
+                "answers": [
+                  {
+                    "concept": "c697ab71-4756-49c9-b77d-8e702de8f5a4",
+                    "label": "Active"
+                  },
+                  {
+                    "concept": "1499AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Moderate"
+                  },
+                  {
+                    "concept": "c15bc273-86d7-4cfe-9080-c2a7dfec7e62",
+                    "label": "Sedentary"
+                  }
+                ]
+              },
+              "id": "activityLevel",
+              "label": "Activity Level"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "163201AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [
+                  {
+                    "concept": "163200AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Unknown if ever smoked"
+                  },
+                  {
+                    "concept": "152722AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Smoker"
+                  },
+                  {
+                    "concept": "163198AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Never smoker"
+                  },
+                  {
+                    "concept": "152807AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Former smoker"
+                  },
+                  {
+                    "concept": "163197AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Current some day smoker"
+                  },
+                  {
+                    "concept": "163195AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Current heavy tobacco smoker"
+                  },
+                  {
+                    "concept": "163196AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Current light tobacco smoker"
+                  },
+                  {
+                    "concept": "163199AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Current every day smoker"
+                  }
+                ]
+              },
+              "id": "smokingStatus",
+              "label": "Smoking Status"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "abadf328-ad4d-48a6-9682-a91a16a59e56",
+                "answers": [
+                  {
+                    "concept": "090d751f-b909-40af-8133-48ac8789a26f",
+                    "label": "One to five years ago"
+                  },
+                  {
+                    "concept": "05333228-6bfe-47d6-84e9-29bd1e7cbe00",
+                    "label": "six to fifteen years ago"
+                  },
+                  {
+                    "concept": "33cd0242-1ba4-4b3c-a11f-2f0432991ce9",
+                    "label": "sixteen plus years ago"
+                  }
+                ]
+              },
+              "id": "quitSmoking",
+              "label": "Time since quit smoking"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "35abffaa-ee31-4d9e-945a-2f6285d2e4b6",
+                "answers": [
+                  {
+                    "concept": "2b237362-67bd-43e5-a0f5-e6b9d4d2e609",
+                    "label": "Somewhat"
+                  },
+                  {
+                    "concept": "168f9c65-9d16-4c73-94f0-c54760ef550b",
+                    "label": "Ready to stop smoking"
+                  },
+                  {
+                    "concept": "612e5381-673a-4a10-849e-a9ee8c604889",
+                    "label": "Not ready to quit at all"
+                  }
+                ]
+              },
+              "id": "willingnessToQuit",
+              "label": "Willingness to quit"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Medical Imaging",
+      "sections": [
+        {
+          "label": "Radiography",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "1392AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+              },
+              "id": "radiographyStudies",
+              "label": "Radiographic studies performed and resuls"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "f2ff6fb4-2bb5-464e-9d1b-7912bb113f65",
+                "answers": [
+                  {
+                    "concept": "7b0b1d1a-2908-4047-a93b-e786cacb4145",
+                    "label": "ABI/TBI"
+                  },
+                  {
+                    "concept": "d327433b-8905-4a87-a8d0-ce9f425b30ed",
+                    "label": "Venous Duplex"
+                  }
+                ]
+              },
+              "id": "vascularStudies",
+              "label": "Vascular studies performed"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "7b0b1d1a-2908-4047-a93b-e786cacb4145"
+              },
+              "id": "abiTbi",
+              "label": "ABI/TBI"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "d327433b-8905-4a87-a8d0-ce9f425b30ed"
+              },
+              "id": "venousDuplex",
+              "label": "Venous Duplex"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "860bbc6e-dbd3-436e-8670-c75b1de958ca",
+                "answers": [
+                  {
+                    "concept": "1115AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Normal"
+                  },
+                  {
+                    "concept": "1116AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Abnormal"
+                  },
+                  {
+                    "concept": "1b98e02e-fade-4cc5-8763-18016458dad4",
+                    "label": "Aneurysms"
+                  },
+                  {
+                    "concept": "46feacc8-a285-4835-9915-43579bdbd73b",
+                    "label": "Other"
+                  }
+                ]
+              },
+              "id": "angiogram",
+              "label": "Angiogram"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Review of systems",
+      "sections": [
+        {
+          "label": "Constitutional",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "1069AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [
+                  {
+                    "concept": "140238AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Fever"
+                  },
+                  {
+                    "concept": "133027AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Night sweats"
+                  },
+                  {
+                    "concept": "871AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Chills"
+                  }
+                ]
+              },
+              "id": "constitutional",
+              "label": "Review of systems"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "167084AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [
+                  {
+                    "concept": "167081AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Oriented to person"
+                  },
+                  {
+                    "concept": "167082AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Oriented to place"
+                  },
+                  {
+                    "concept": "167083AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Oriented to time"
+                  }
+                ]
+              },
+              "id": "behavioral",
+              "label": "Behavioral"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "0de7f389-e94d-4e48-8646-7cc00701823f",
+                "answers": [
+                  {
+                    "concept": "123919AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Ulcer"
+                  },
+                  {
+                    "concept": "512AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Rash"
+                  },
+                  {
+                    "concept": "a48fd009-871b-4959-9ffb-1965d4d221d2",
+                    "label": "Not healing"
+                  },
+                  {
+                    "concept": "52969da9-11f9-4309-b250-9781daed5e4e",
+                    "label": "Laceration"
+                  },
+                  {
+                    "concept": "f3f5bdc3-068f-41be-9861-d993fbc25823",
+                    "label": "Changes in skin color"
+                  }
+                ]
+              },
+              "id": "integumentary",
+              "label": "Integumentary"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "checkbox",
+                "concept": "3cd766a8-26fe-102b-80cb-0017a47871b2",
+                "answers": [
+                  {
+                    "concept": "3ceaf8ee-26fe-102b-80cb-0017a47871b2",
+                    "label": "Weakness"
+                  },
+                  {
+                    "concept": "206AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Seizure"
+                  },
+                  {
+                    "concept": "130843AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Paraplegia"
+                  },
+                  {
+                    "concept": "d660ed42-2ce7-427d-8f4e-e44bbbdf6cd8",
+                    "label": "Numbness"
+                  },
+                  {
+                    "concept": "117655AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Hemiplegia"
+                  },
+                  {
+                    "concept": "3cd659ac-26fe-102b-80cb-0017a47871b2",
+                    "label": "Focal neurological deficit"
+                  },
+                  {
+                    "concept": "96e52565-baa9-48f4-b3d5-fe2e3b9ebedc",
+                    "label": "Decreased sensation in hands"
+                  },
+                  {
+                    "concept": "b8875794-e7ab-47b4-94ce-11381b7b5f0e",
+                    "label": "Decreased sensation in feet"
+                  },
+                  {
+                    "concept": "3cd75230-26fe-102b-80cb-0017a47871b2",
+                    "label": "Anormal"
+                  }
+                ]
+              },
+              "id": "neurologic",
+              "label": "Neurologic"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Physical Assessment",
+      "sections": [
+        {
+          "label": "General",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "checkbox",
+                "concept": "cd5ec324-1da9-4a6a-be5d-7e59e4ba8d7c",
+                "answers": [
+                  {
+                    "concept": "45d9f6fd-652c-4281-b47b-3d1308ae5745",
+                    "label": "Healthy appearing"
+                  },
+                  {
+                    "concept": "c317b1c8-6e7b-4615-9f8e-45956c5f4814",
+                    "label": "Well-nourished"
+                  },
+                  {
+                    "concept": "55a1cd7a-63c6-4a0b-909e-53a7167fa820",
+                    "label": "Underweight"
+                  },
+                  {
+                    "concept": "7811e682-bc09-4682-8bfe-26b373dd756c",
+                    "label": "Overweight"
+                  },
+                  {
+                    "concept": "5e8b6341-b3c2-46a9-85b9-d2716232a2e8",
+                    "label": "Obesity"
+                  },
+                  {
+                    "concept": "a48e7be0-5171-411f-879f-edd40d6afe70",
+                    "label": "No acute distress"
+                  },
+                  {
+                    "concept": "0a218a8f-7d44-4eb5-bb3d-2050b9d9c03d",
+                    "label": "Morbidly obese"
+                  },
+                  {
+                    "concept": "b1a1b5fc-1300-4be1-9039-5d4290ffd031",
+                    "label": "Disheveled"
+                  },
+                  {
+                    "concept": "711d6d0e-0990-4a52-99c8-7edfb388d9ce",
+                    "label": "Chronically ill"
+                  },
+                  {
+                    "concept": "cf0e2fd7-80a6-43c5-a8f4-8c8494a84aab",
+                    "label": "Acutely ill"
+                  },
+                  {
+                    "concept": "a19355f9-f758-4e8e-8b95-8dec9debbff2",
+                    "label": "Active and Alert"
+                  }
+                ]
+              },
+              "id": "appearance",
+              "label": "Appearance"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "f4bfeec8-ffbf-43d0-86bc-29b55cf97d07",
+                "answers": [
+                  {
+                    "concept": "162751AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Able to walk with assistance"
+                  },
+                  {
+                    "concept": "162750AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Able to walk without assistance"
+                  },
+                  {
+                    "concept": "162752AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Bedridden"
+                  },
+                  {
+                    "concept": "d6df8e4a-2d2c-4004-a162-846e5ff6c653",
+                    "label": "Wheel chair Bound"
+                  }
+                ]
+              },
+              "id": "ambulation",
+              "label": "Ambulation"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "checkbox",
+                "concept": "045a48f9-6a12-4a76-9db2-8ba17fc6eefa",
+                "answers": [
+                  {
+                    "concept": "2a5da7a0-a72b-4f88-90ba-1b6ebc92dfb8",
+                    "label": "Poor Judgement"
+                  },
+                  {
+                    "concept": "167083AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Oriented to time"
+                  },
+                  {
+                    "concept": "167082AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Oriented to place"
+                  },
+                  {
+                    "concept": "167081AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Oriented to person"
+                  },
+                  {
+                    "concept": "fe91b27a-ca40-4876-a14c-83d22f860967",
+                    "label": "Insight"
+                  }
+                ]
+              },
+              "id": "behavioralInsight",
+              "label": "Behavioral"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "checkbox",
+                "concept": "1081AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [
+                  {
+                    "concept": "6035AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Pain, lower extremities"
+                  },
+                  {
+                    "concept": "664AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Negative"
+                  },
+                  {
+                    "concept": "133632AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Muscle pain"
+                  },
+                  {
+                    "concept": "5312AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Joint swelling"
+                  },
+                  {
+                    "concept": "80AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Joint pain"
+                  },
+                  {
+                    "concept": "590AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Edema, legs"
+                  }
+                ]
+              },
+              "id": "musculoskeletal",
+              "label": "Musculoskeletal"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "b3cfcead-b27d-4609-ba00-d31c861c5e33"
+              },
+              "id": "painLevel",
+              "label": "Pain level",
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "183272eb-36df-458b-ab12-83b3752d7bfb"
+              },
+              "id": "locationOfPain",
+              "label": "Location of pain"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "fa8fedc0-c066-4da3-8dc1-2ad8621fc480"
+              },
+              "id": "additionalNotes",
+              "label": "Notes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Peripheral Vascular",
+      "sections": [
+        {
+          "label": "Peripheral Vascular",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "6a9e6308-25b3-4da0-9a50-bdb158a6ddd4"
+              },
+              "id": "capillaryReﬁll",
+              "label": "Capillary reﬁll"
+            }
+          ]
+        },
+        {
+          "label": "Dorsalis Pedis Pulse",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "checkbox",
+                "concept": "b2f1fcc6-95d1-48f9-91c9-9f10e3fbbacd",
+                "answers": [
+                  {
+                    "concept": "163748AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Present"
+                  },
+                  {
+                    "concept": "163747AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Absent"
+                  }
+                ]
+              },
+              "id": "dorsalisPedisPulse",
+              "label": "Dorsalis Pedis Pulse Right"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "checkbox",
+                "concept": "34e9cbf3-8ff2-47b0-9591-62c58a687966",
+                "answers": [
+                  {
+                    "concept": "163747AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Absent"
+                  },
+                  {
+                    "concept": "163748AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Present"
+                  }
+                ]
+              },
+              "id": "dorsalisPedisPulseLeft",
+              "label": "Dorsalis Pedis Pulse Left"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "checkbox",
+                "concept": "b2f1fcc6-95d1-48f9-91c9-9f10e3fbbacd",
+                "answers": [
+                  {
+                    "concept": "163748AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Present"
+                  },
+                  {
+                    "concept": "163747AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Absent"
+                  }
+                ]
+              },
+              "id": "posteriorTibialisPulseRight",
+              "label": "Posterior Tibialis Pulse Right"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "checkbox",
+                "concept": "307c95df-c707-44b5-95f1-83707d35609c",
+                "answers": [
+                  {
+                    "concept": "163748AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Present"
+                  },
+                  {
+                    "concept": "163747AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Absent"
+                  }
+                ]
+              },
+              "id": "posteriorTibialisPulseLeft",
+              "label": "Posterior Tibialis Pulse Left"
+            }
+          ]
+        },
+        {
+          "label": "Pulse ",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "18fb950d-da25-4904-a24d-f3f49c01f9a5",
+                "answers": [
+                  {
+                    "concept": "e42bdc45-1f75-4fdd-80bc-a76db013bccf",
+                    "label": "weak"
+                  },
+                  {
+                    "concept": "1115AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Normal"
+                  },
+                  {
+                    "concept": "163747AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Absent"
+                  }
+                ]
+              },
+              "id": "pulseQuality",
+              "label": "Pulse Quality"
+            }
+          ]
+        },
+        {
+          "label": "Neurologic",
+          "isExpanded": "true",
+          "questions": []
+        }
+      ]
+    },
+    {
+      "label": "Endocrine",
+      "sections": [
+        {
+          "label": "Endocrine",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "098ee039-fb81-49d1-bc92-23748fb7eaa7",
+                "answers": [
+                  {
+                    "concept": "48d44b97-10e8-4bbd-87a6-dff5ba60ef78",
+                    "label": "Diabetic"
+                  },
+                  {
+                    "concept": "7693bf33-5e89-4b6a-aacb-96ac7cc6e5e1",
+                    "label": "Non-diabetic"
+                  }
+                ]
+              },
+              "id": "endocrine",
+              "label": "Endocrine"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "887AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "min": "0",
+                "max": "240"
+              },
+              "id": "bloodSugar",
+              "label": "Blood Sugar",
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "a6a15c2f-5649-4461-9e3f-82506ca9667f",
+                "min": "0"
+              },
+              "id": "glucoseAttachedToHemoglobin",
+              "label": "Glucose attached to hemoglobin",
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "83198d7b-4f79-48f8-b981-86b33a911af1",
+                "answers": [
+                  {
+                    "concept": "4078a944-f458-425b-9f73-bcfd1f90687b",
+                    "label": "Good"
+                  },
+                  {
+                    "concept": "ca0cc159-999e-4414-a3eb-6877d1ebfc73",
+                    "label": "Fair"
+                  },
+                  {
+                    "concept": "bfaf1721-a3a7-4af2-a7df-a9f7a3b687f7",
+                    "label": "Poor"
+                  }
+                ]
+              },
+              "id": "bloodSugarControl",
+              "label": "Blood Sugar Control"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "00d71915-6be7-4775-80ba-a1530275448d",
+                "answers": [
+                  {
+                    "concept": "703AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Positive"
+                  },
+                  {
+                    "concept": "664AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Negative"
+                  }
+                ]
+              },
+              "id": "monoﬁlamentTesting",
+              "label": "Monoﬁlament testing"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "checkbox",
+                "concept": "1120AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [
+                  {
+                    "concept": "150555AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Abscess of skin and subcutaneous tissue"
+                  },
+                  {
+                    "concept": "f3f5bdc3-068f-41be-9861-d993fbc25823",
+                    "label": "Changes in skin color"
+                  },
+                  {
+                    "concept": "61041a73-61b5-4ca2-87ea-780a1b7b482f",
+                    "label": "Decreased turgor"
+                  },
+                  {
+                    "concept": "118536AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Erythema"
+                  },
+                  {
+                    "concept": "2a9f3595-eaa8-4a56-8b93-be2a0a01aa0d",
+                    "label": "Good turgor"
+                  },
+                  {
+                    "concept": "136455AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Itching"
+                  },
+                  {
+                    "concept": "ab0ff763-8f2e-427d-81d4-fccc337fb356",
+                    "label": "Necrosis"
+                  },
+                  {
+                    "concept": "125201AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Swelling of Skin"
+                  },
+                  {
+                    "concept": "123919AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Ulcer"
+                  }
+                ]
+              },
+              "id": "skin",
+              "label": "Skin"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "fa8fedc0-c066-4da3-8dc1-2ad8621fc480"
+              },
+              "id": "addedNotes",
+              "label": "Additional Notes "
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Wound",
+      "sections": [
+        {
+          "label": "location",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "9225e0c6-2324-49cd-b701-ebdb9f8659d0"
+              },
+              "id": "siteOfWound",
+              "label": "Site of wound "
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "2ffc5ef2-4de3-4a8c-86b9-99cd841f46f1"
+              },
+              "id": "woundSize",
+              "label": "Wound size"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "e5f2c9b5-4c62-4681-bb68-fe2f120fd7e5",
+                "answers": [
+                  {
+                    "concept": "1065AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Yes"
+                  },
+                  {
+                    "concept": "1066AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "No"
+                  }
+                ]
+              },
+              "id": "diabeticUlcer",
+              "label": "Diabetic Ulcer"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "a63a57ee-b069-41df-bbdc-24176b4628b4",
+                "answers": [
+                  {
+                    "concept": "1065AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Yes"
+                  },
+                  {
+                    "concept": "1066AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "No"
+                  }
+                ]
+              },
+              "id": "venousUlcer",
+              "label": "Venous Ulcer"
+            }
+          ]
+        },
+        {
+          "label": "Wound Dimensions",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "02ce67eb-be1a-4f25-9317-8f91e0fcfdab"
+              },
+              "id": "length",
+              "label": "Length (cm)",
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "8753c8ff-08a7-4fe9-a17f-db88a3196254"
+              },
+              "id": "width",
+              "label": "Width (cm)"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "bbf10f7e-d1d3-447f-89a0-0edb5aa58c5d"
+              },
+              "id": "depth",
+              "label": "Depth (cm)"
+            }
+          ]
+        },
+        {
+          "label": "Wound base and Tissue type",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "checkbox",
+                "concept": "3c0b09b5-5df7-4c85-99d4-36745f4abd31",
+                "answers": [
+                  {
+                    "concept": "efd613c6-4e1e-40b9-a372-8d23e6b20a38",
+                    "label": "Granular"
+                  },
+                  {
+                    "concept": "6e0e5777-a02a-41f9-a0a4-03ad0ae1cdcb",
+                    "label": "Eschar"
+                  },
+                  {
+                    "concept": "8bbfa0e0-5d12-4aa9-87a3-414e4feaf14c",
+                    "label": "Epithelialized"
+                  },
+                  {
+                    "concept": "e4e8a173-6c32-44fd-9c39-ffe91c9402e9",
+                    "label": "Necrotic tissues"
+                  },
+                  {
+                    "concept": "2971ffdd-a140-47d9-a57e-ef3f16838bd0",
+                    "label": "Slough"
+                  }
+                ]
+              },
+              "id": "woundBase",
+              "label": "Wound base and Tissue type"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "file",
+                "concept": "7cac8397-53cd-4f00-a6fe-028e8d743f8e"
+              },
+              "id": "attachments",
+              "label": "Attachments"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Exudate",
+      "sections": [
+        {
+          "label": "Exudate Present ",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "21ecb158-c6f9-4ce9-8df4-5e03d99d3e05",
+                "answers": [
+                  {
+                    "concept": "382578c2-91b4-4235-a02d-d20fbe9f8044",
+                    "label": "1+"
+                  },
+                  {
+                    "concept": "709e4a07-af9f-432b-8711-b3caed41998c",
+                    "label": "2+"
+                  },
+                  {
+                    "concept": "9e6f2ae1-4aa3-4cbc-bd8d-98515b76cc15",
+                    "label": "3+"
+                  }
+                ]
+              },
+              "id": "ExudatePresent",
+              "label": "Presence of exudate"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "f1163eff-384c-4377-8476-8170b4d8d575",
+                "answers": [
+                  {
+                    "concept": "da959908-ba99-45f4-ab45-b2320b02d8e9",
+                    "label": "Scant or minimal"
+                  },
+                  {
+                    "concept": "1107AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "None"
+                  },
+                  {
+                    "concept": "1499AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Moderate"
+                  },
+                  {
+                    "concept": "56d7a431-b074-4416-97d4-39d57e15c196",
+                    "label": "Heavy"
+                  }
+                ]
+              },
+              "id": "ExudateAmount",
+              "label": "Exudate Amount"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "f4918ec1-a493-42fb-93bf-9e0c8404ab35",
+                "answers": [
+                  {
+                    "concept": "ad06c21b-c81e-43d8-a82e-e38b7a838f4b",
+                    "label": "Serous"
+                  },
+                  {
+                    "concept": "e75f9b7a-8db2-4368-9a77-9823a559bb4d",
+                    "label": "Serosanguineous"
+                  },
+                  {
+                    "concept": "0db1f8ce-575a-43bf-9fca-58c4155d7e94",
+                    "label": "Purulent"
+                  },
+                  {
+                    "concept": "15436df7-e4e9-4535-bfb3-424cca4ef953",
+                    "label": "Sanguineous"
+                  }
+                ]
+              },
+              "id": "ExudateType",
+              "label": "Exudate Type"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "5b044298-6488-4769-9a11-a22ad246ad04",
+                "answers": [
+                  {
+                    "concept": "19018daa-1138-4404-9ef3-c04aa1395d68",
+                    "label": "Malodorous"
+                  },
+                  {
+                    "concept": "1107AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "None"
+                  }
+                ]
+              },
+              "id": "Odor",
+              "label": "Odor"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Plan of Action",
+      "sections": [
+        {
+          "label": "Plan of action",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "268a0d32-f3f2-4455-ac42-81663dd5631d"
+              },
+              "id": "planOfAction",
+              "label": "Plan of Action"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "checkbox",
+                "concept": "e2124576-e65b-4f5b-a356-45bba1555a5c",
+                "answers": [
+                  {
+                    "concept": "da26de3b-1ba3-4e94-a492-1ea93f8649ec",
+                    "label": "Provided education on diabetic diet"
+                  },
+                  {
+                    "concept": "cfaa133a-3c2b-438b-be44-0261babdc471",
+                    "label": "Provided education on glucose monitoring"
+                  },
+                  {
+                    "concept": "d3fa6390-b2b7-47c4-ae57-344dc028b219",
+                    "label": "Provided education on signs and symptoms of infection"
+                  },
+                  {
+                    "concept": "c390b13a-78d5-4fc3-b866-17241f8454ee",
+                    "label": "Provided education on smoking cessation"
+                  },
+                  {
+                    "concept": "ede76fc8-df3c-4e45-a2fb-2045d577b807",
+                    "label": "Provided education on wound healing diet"
+                  },
+                  {
+                    "concept": "b0426682-d8ca-417e-85f6-d25a4e6996e1",
+                    "label": "Provided educations on adherence to wound protocol"
+                  }
+                ]
+              },
+              "id": "educationProvided ",
+              "label": "Education Provided"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "46feacc8-a285-4835-9915-43579bdbd73b"
+              },
+              "id": "other",
+              "label": "Other"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

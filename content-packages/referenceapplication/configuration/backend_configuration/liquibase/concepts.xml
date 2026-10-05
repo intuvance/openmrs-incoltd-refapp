@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog/1.9" 
+                   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" 
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog/1.9
+                   http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-1.9.xsd">
+    <!-- Concepts Updates -->
+
+    <changeSet id="2025-09-29-02-08-PM-06" author="miirochristopher" runAlways="true">
+        <comment>
+            Update temperature concept to allow decimal values
+        </comment>
+        <sql>
+            UPDATE concept_numeric 
+            SET allow_decimal = 1 
+            WHERE concept_id = (
+                SELECT DISTINCT concept_id 
+                FROM concept_name 
+                WHERE name = 'Temperature' 
+                AND voided = 0
+            );
+        </sql>
+    </changeSet>
+
+    <changeSet id="2025-09-29-02-15-PM-07" author="miirochristopher" runAlways="true">
+        <comment>
+            Update all numeric concepts to allow decimal values
+        </comment>
+        <sql>
+            UPDATE concept_numeric 
+            SET allow_decimal = 1 
+            WHERE allow_decimal = 0;
+        </sql>
+    </changeSet>
+
+    <changeSet id="2025-10-02-12-45-PM-09" author="miirochristopher" runAlways="true">
+        <comment>
+            Set concept 'Venous stasis ulcer of leg' UUID
+        </comment>
+        <sql>UPDATE concept SET uuid = '0c0d2403-3c29-4a5b-96d3-79d7e5c5954b' WHERE concept_id = (SELECT DISTINCT concept_id from concept_name WHERE name='Venous stasis ulcer of leg');</sql>
+    </changeSet>
+</databaseChangeLog>

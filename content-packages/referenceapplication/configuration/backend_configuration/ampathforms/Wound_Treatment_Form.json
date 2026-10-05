@@ -1,0 +1,860 @@
+{
+  "name": "Wound Treatment Form",
+  "uuid": "503ba1ae-47cb-47d4-b51e-1fbd6372d8f8",
+  "description": "Suubi EMR wound treatment form",
+  "version": "1.0",
+  "published": true,
+  "retired": false,
+  "encounter": "Wound Treatment",
+  "processor": "EncounterFormProcessor",
+  "encounterType": "6e7b34a3-a0ca-4875-a397-701c2d494084",
+  "referencedForms": [],
+  "pages": [
+    {
+      "label": "Encounter details",
+      "sections": [
+        {
+          "label": "Details ",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "encounterDatetime",
+              "questionOptions": {
+                "rendering": "datetime"
+              },
+              "id": "date",
+              "datePickerFormat": "both",
+              "label": "Date "
+            },
+            {
+              "type": "encounterLocation",
+              "questionOptions": {
+                "rendering": "ui-select-extended"
+              },
+              "id": "location",
+              "label": "Treatment Location"
+            },
+            {
+              "type": "encounterProvider",
+              "questionOptions": {
+                "rendering": "ui-select-extended"
+              },
+              "id": "provider",
+              "label": "Provider"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "162696AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [
+                  {
+                    "concept": "1065AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Yes"
+                  },
+                  {
+                    "concept": "1066AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "No"
+                  },
+                  {
+                    "concept": "1067AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Unknown"
+                  }
+                ]
+              },
+              "id": "treatmentConsent",
+              "label": "Consent"
+            }
+          ]
+        },
+        {
+          "label": "Vital Signs",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "5085AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "250",
+                "min": "0"
+              },
+              "id": "bloodPressure",
+              "label": "Systolic blood pressure",
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "5086AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "150",
+                "min": "0"
+              },
+              "id": "diastolicPressure",
+              "label": "Diastolic Blood Pressure",
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "5087AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "230",
+                "min": "0"
+              },
+              "id": "heartRate",
+              "label": "Pulse",
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "5092AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "100",
+                "min": "0"
+              },
+              "id": "spo2",
+              "label": "SPO2"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "5242AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "max": "99.0",
+                "min": "0"
+              },
+              "id": "respiratoryRate",
+              "label": "RR",
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "concept": "5088AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "rendering": "number",
+                "max": "120.0",
+                "min": "25.0"
+              },
+              "id": "temperature",
+              "label": "Temperature (C) or (F):"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Wound Bed Assessment",
+      "sections": [
+        {
+          "label": "Wound assessment",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "4ed07c2d-13f4-4531-bf5a-084d74322fe8"
+              },
+              "id": "woundLocation",
+              "label": "Wound Location"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "c9d9ae52-720b-454a-832c-427f2c2f2e36",
+                "answers": [
+                  {
+                    "concept": "0c0d2403-3c29-4a5b-96d3-79d7e5c5954b",
+                    "label": "Venous stasis ulcer of leg"
+                  },
+                  {
+                    "concept": "5622AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Other"
+                  },
+                  {
+                    "concept": "142451AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Diabetic foot ulcer"
+                  }
+                ]
+              },
+              "id": "typeOfWound",
+              "label": "Type of wound"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "d3e29245-48f8-46c1-9252-e05ab3c713c1",
+                "answers": [
+                  {
+                    "concept": "24956324-2789-4535-88d3-7e3ceae4b7c2",
+                    "label": "Healing, not infected"
+                  },
+                  {
+                    "concept": "381e9289-a5f6-46b6-bf24-acd3c0aaf216",
+                    "label": "Infected"
+                  },
+                  {
+                    "concept": "a48fd009-871b-4959-9ffb-1965d4d221d2",
+                    "label": "Not healing"
+                  }
+                ]
+              },
+              "id": "woundStatus",
+              "label": "Wound Status"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "bcfd35c1-eacb-4371-a79f-d116e722484b",
+                "answers": [
+                  {
+                    "concept": "e0db42ec-551a-4858-9ba9-8b696421890d",
+                    "label": "Stage 1"
+                  },
+                  {
+                    "concept": "2b79176d-674b-4cb9-9fbf-fe794d209935",
+                    "label": "Stage 2"
+                  },
+                  {
+                    "concept": "8db76dca-45db-4def-96ea-1ef38478e580",
+                    "label": "Stage 3"
+                  },
+                  {
+                    "concept": "13dda661-a4f4-40ad-9f6b-f1abf1ba5010",
+                    "label": "Stage 4"
+                  },
+                  {
+                    "concept": "a73ca944-1eb6-46a6-b2f7-3d530155db74",
+                    "label": "Deep tissue injury"
+                  }
+                ]
+              },
+              "id": "woundStage",
+              "label": "Wound Stage"
+            }
+          ]
+        },
+        {
+          "label": "Pre-debridement dimentions",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "02ce67eb-be1a-4f25-9317-8f91e0fcfdab"
+              },
+              "id": "length",
+              "label": "Length",
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "8753c8ff-08a7-4fe9-a17f-db88a3196254"
+              },
+              "id": "width",
+              "label": "Width",
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "bbf10f7e-d1d3-447f-89a0-0edb5aa58c5d"
+              },
+              "id": "depth",
+              "label": "Depth",
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "de341555-c125-4a01-8196-42a86790d497",
+                "answers": [
+                  {
+                    "concept": "d08d6be0-b330-4982-a314-fe92979b1c87",
+                    "label": "Partial thickness"
+                  },
+                  {
+                    "concept": "d475b8e2-037c-4d31-beac-b39171e51e88",
+                    "label": "Full thickness"
+                  }
+                ]
+              },
+              "id": "woundDepth",
+              "label": "Wound depth"
+            }
+          ]
+        },
+        {
+          "label": "Wound Debridement assessment",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "f1163eff-384c-4377-8476-8170b4d8d575",
+                "answers": [
+                  {
+                    "concept": "56d7a431-b074-4416-97d4-39d57e15c196",
+                    "label": "Heavy"
+                  },
+                  {
+                    "concept": "1499AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Moderate"
+                  },
+                  {
+                    "concept": "1107AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "None"
+                  },
+                  {
+                    "concept": "da959908-ba99-45f4-ab45-b2320b02d8e9",
+                    "label": "Scant or minimal"
+                  }
+                ]
+              },
+              "id": "exudateAmount",
+              "label": "Exudate Amount"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "6a7956d4-87bc-45c7-8ed3-d85fac2c2980",
+                "answers": [
+                  {
+                    "concept": "ad06c21b-c81e-43d8-a82e-e38b7a838f4b",
+                    "label": "Serous"
+                  },
+                  {
+                    "concept": "af89dfab-f433-48d3-8ca1-4f705922977a",
+                    "label": "Serosanguineous"
+                  },
+                  {
+                    "concept": "0db1f8ce-575a-43bf-9fca-58c4155d7e94",
+                    "label": "Purulent"
+                  }
+                ]
+              },
+              "id": "exudateConsistency",
+              "label": "Exudate Consistency"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "21ecb158-c6f9-4ce9-8df4-5e03d99d3e05",
+                "answers": [
+                  {
+                    "concept": "382578c2-91b4-4235-a02d-d20fbe9f8044",
+                    "label": "1+"
+                  },
+                  {
+                    "concept": "709e4a07-af9f-432b-8711-b3caed41998c",
+                    "label": "2+"
+                  },
+                  {
+                    "concept": "9e6f2ae1-4aa3-4cbc-bd8d-98515b76cc15",
+                    "label": "3+"
+                  }
+                ]
+              },
+              "id": "presenceOfExudate",
+              "label": "Presence of Exudate"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "163894AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                "answers": [
+                  {
+                    "concept": "1065AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Yes"
+                  },
+                  {
+                    "concept": "1066AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "No"
+                  }
+                ]
+              },
+              "id": "selling",
+              "label": "Swelling/Edema"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "05b558bf-89cb-44f6-8a17-79a09b30ca90",
+                "answers": [
+                  {
+                    "concept": "163747AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Absent"
+                  },
+                  {
+                    "concept": "163748AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Present"
+                  }
+                ]
+              },
+              "id": "painTenderness",
+              "label": "Pain/tenderness"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "10880914-ece9-40c0-ac6d-9e51db5e1069"
+              },
+              "id": "granulationTissue",
+              "label": "Granulation Tissue",
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "e4e8a173-6c32-44fd-9c39-ffe91c9402e9"
+              },
+              "id": "necroticTissue",
+              "label": "Necrotic Tissue"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "fa8fedc0-c066-4da3-8dc1-2ad8621fc480"
+              },
+              "id": "additionalNotes",
+              "label": "Additional Text"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Pre-treatment Photographs",
+      "sections": [
+        {
+          "label": "Attachments",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "file",
+                "concept": "7cac8397-53cd-4f00-a6fe-028e8d743f8e"
+              },
+              "id": "attachements",
+              "label": "attachements"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Cleansing Methods",
+      "sections": [
+        {
+          "label": "Cleansing Method",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "521015e5-bd67-4a2d-a424-20f471abc2e7",
+                "answers": [
+                  {
+                    "concept": "186d438e-98a2-4955-92dd-20781ff6ef1a",
+                    "label": "Normal saline"
+                  },
+                  {
+                    "concept": "ca7a9d22-cfc9-4c60-90af-17bf70699ea7",
+                    "label": "Chlorhexidine gluconate 4% soap solution"
+                  },
+                  {
+                    "concept": "3f26398a-b656-4dff-bcca-a5d311af972b",
+                    "label": "7.5% povidone iodine soap solution"
+                  },
+                  {
+                    "concept": "5622AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Other"
+                  }
+                ]
+              },
+              "id": "cleansingMethod",
+              "label": "Wound cleansing method"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "46feacc8-a285-4835-9915-43579bdbd73b"
+              },
+              "id": "other",
+              "label": "Other"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "b1de0ab0-c0bd-4c55-89e8-55db8de80a24"
+              },
+              "id": "debridementTechnique",
+              "label": "Debridement Technique"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "14666a92-d8e7-453f-8363-6ff6b3afa85d",
+                "answers": [
+                  {
+                    "concept": "63a90c8e-3921-48f1-94bd-f344aa0bcaef",
+                    "label": "Surgical (Sharp)"
+                  },
+                  {
+                    "concept": "08976677-1e30-495b-8965-73bd082004e9",
+                    "label": "Mechanical Debridement"
+                  },
+                  {
+                    "concept": "a063cb90-fbd0-4ba5-8ce6-7e47e8afba8d",
+                    "label": "Enzymatic (chemical)"
+                  },
+                  {
+                    "concept": "8fe9d2b7-d6c7-4182-a7ce-f5bcd588f108",
+                    "label": "Biologic (Maggot)"
+                  },
+                  {
+                    "concept": "fcb3afd8-d399-4345-84ca-5b3ca57abb6a",
+                    "label": "Autolytic"
+                  }
+                ]
+              },
+              "id": "debridementProcedure",
+              "label": "Debridement Procedure"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Post Debridement Assessment",
+      "sections": [
+        {
+          "label": "Post-debridement dimensions (cm)",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "02ce67eb-be1a-4f25-9317-8f91e0fcfdab"
+              },
+              "id": "postLength",
+              "label": "Length",
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "8753c8ff-08a7-4fe9-a17f-db88a3196254"
+              },
+              "id": "postWidth",
+              "label": "Width",
+              "questionInfo": "Allows decimals"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "bbf10f7e-d1d3-447f-89a0-0edb5aa58c5d"
+              },
+              "id": "postDepth",
+              "label": "Depth",
+              "questionInfo": "Allows decimals"
+            }
+          ]
+        },
+        {
+          "label": "Estimated blood loss",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "b5ab7bc0-bffb-4dc8-b832-2e1713f06944"
+              },
+              "id": "estimatedBloodLoss",
+              "label": "Estimated Blood Loss",
+              "questionInfo": "Allows decimals"
+            }
+          ]
+        },
+        {
+          "label": "Hemostasis",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "c21ec124-c837-4f45-b8f6-16c24e6d53aa",
+                "answers": [
+                  {
+                    "concept": "1065AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Yes"
+                  },
+                  {
+                    "concept": "1066AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "No"
+                  }
+                ]
+              },
+              "id": "hemostasis",
+              "label": "Hemostasis"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "83981c65-fd42-414d-abe1-0d4b977407f1"
+              },
+              "id": "hemostasisAchieved",
+              "label": "How was hemostasis achieved"
+            }
+          ]
+        },
+        {
+          "label": "Graft Used",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "62494373-c38d-4b0e-853f-5b291d120cd4"
+              },
+              "id": "graftTypeUsed ",
+              "label": "Graft type used"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "a395b911-7ec3-4d1f-9b5e-479693d0488b"
+              },
+              "id": "graftTotalApplied",
+              "label": "Graft total applied"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "number",
+                "concept": "8357074a-8340-4a2f-95e9-9347897b4e9d"
+              },
+              "id": "graftTotalWaste",
+              "label": "Graft total waste"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "de4fb478-4ec0-4860-a903-22b69d002b45",
+                "answers": [
+                  {
+                    "concept": "1065AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Yes"
+                  },
+                  {
+                    "concept": "1066AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "No"
+                  }
+                ]
+              },
+              "id": "painDuringProcedure",
+              "label": "Pain During Procedure"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "fa8fedc0-c066-4da3-8dc1-2ad8621fc480"
+              },
+              "id": "notes",
+              "label": "Aditional Notes "
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "file",
+                "concept": "7cac8397-53cd-4f00-a6fe-028e8d743f8e"
+              },
+              "id": "labelsOfGraftsUsed",
+              "label": "Labels of grafts used "
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Dressing",
+      "sections": [
+        {
+          "label": "Dressing applied",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "933c9d29-d162-455e-af02-59c289c2c5b1",
+                "answers": [
+                  {
+                    "concept": "c34a64e6-c566-4b15-bd7f-189cb46151d8",
+                    "label": "Abdominal Dressing"
+                  },
+                  {
+                    "concept": "9a2e20ba-4d72-410f-823a-462b19bcbe0d",
+                    "label": "Kerlix"
+                  },
+                  {
+                    "concept": "1f1866b5-aa32-48e3-8b3a-0c5f3c621e6b",
+                    "label": "Non-adhesive Gauze"
+                  },
+                  {
+                    "concept": "eed2a145-8f98-4f93-b6f9-2d5c79931238",
+                    "label": "Offloading"
+                  },
+                  {
+                    "concept": "5622AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Other"
+                  },
+                  {
+                    "concept": "fe792056-6904-4638-b0e3-c49c1400288b",
+                    "label": "Unna Boot"
+                  },
+                  {
+                    "concept": "2cb7bc56-914f-40f8-9c95-ed01150180e6",
+                    "label": "Compression Dressing"
+                  }
+                ]
+              },
+              "id": "dressingApplied",
+              "label": "Dressing Applied"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "file",
+                "concept": "7cac8397-53cd-4f00-a6fe-028e8d743f8e"
+              },
+              "id": "photosDebridement",
+              "label": "Post Debridement Photographs"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "fa8fedc0-c066-4da3-8dc1-2ad8621fc480"
+              },
+              "id": "addNotes",
+              "label": "Notes"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "select",
+                "concept": "e67627dd-5bdc-46b0-bfa4-e0d376caf82d",
+                "answers": [
+                  {
+                    "concept": "b9c27fee-9923-4113-928e-bea49fb08543",
+                    "label": "Twice weekly"
+                  },
+                  {
+                    "concept": "162256AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Three times weekly"
+                  },
+                  {
+                    "concept": "1099AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Once weekly"
+                  },
+                  {
+                    "concept": "160862AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
+                    "label": "Daily"
+                  },
+                  {
+                    "concept": "f767dc7c-efbe-4ca0-b74a-c389703bb262",
+                    "label": "As needed"
+                  }
+                ]
+              },
+              "id": "frequencyOfBandageChanges",
+              "label": "Frequency of Bandage Changes"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "label": "Education",
+      "sections": [
+        {
+          "label": "Care instructions",
+          "isExpanded": "true",
+          "questions": [
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "checkbox",
+                "concept": "e2124576-e65b-4f5b-a356-45bba1555a5c",
+                "answers": [
+                  {
+                    "concept": "0f609ab8-cb0f-4b94-b499-eb19a2b98151",
+                    "label": "Reviewed signs and symptoms of infection."
+                  },
+                  {
+                    "concept": "f1d3503b-db6f-44ba-bacf-448140d90657",
+                    "label": "Reinforced the importance of avoiding pressure"
+                  },
+                  {
+                    "concept": "67970243-16b1-4dd9-9dfa-11552ac349b2",
+                    "label": "Explaind the need to keep dressing clean"
+                  },
+                  {
+                    "concept": "7665b062-d12e-4e10-b302-a95e8af3d318",
+                    "label": "Advised the patient to avoid removing dressing unless instructed by writing provider"
+                  }
+                ]
+              },
+              "id": "educationInstructions",
+              "label": "Education Provided"
+            },
+            {
+              "type": "obs",
+              "questionOptions": {
+                "rendering": "text",
+                "concept": "fa8fedc0-c066-4da3-8dc1-2ad8621fc480"
+              },
+              "id": "addedNotes",
+              "label": "Additional Session Notes "
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

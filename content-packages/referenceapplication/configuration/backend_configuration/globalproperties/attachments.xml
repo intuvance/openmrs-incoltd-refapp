@@ -1,0 +1,18 @@
+<config>
+	<globalProperties>
+		<globalProperty>
+			<property>attachments.maxUploadFileSize</property>
+			<value>100</value>
+		</globalProperty>
+
+		<globalProperty>
+			<property>attachments.maxStorageFileSize</property>
+			<value>100</value>
+		</globalProperty>
+
+		<globalProperty>
+			<property>stockmanagement.stockItemsMaxUploadFileSize</property>
+			<value>100</value>
+		</globalProperty>
+	</globalProperties>
+</config>
