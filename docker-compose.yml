@@ -26,6 +26,13 @@ services:
     container_name: "${OMRS_NAME_PREFIX:-omrs}-gateway"
     image: ${OMRS_GATEWAY_IMAGE:?set OMRS_GATEWAY_IMAGE in .env}
     restart: unless-stopped
+    environment:
+      # nginx refuses a request body larger than this with 413 before it is
+      # proxied, so it governs how large an upload (patient attachment, FHIR
+      # bundle) can be. Keep it aligned with the Tomcat connector's maxPostSize
+      # patched in the backend image: the smaller of the two is the effective
+      # limit, so raising only one changes nothing.
+      OMRS_MAX_UPLOAD_SIZE: ${OMRS_MAX_UPLOAD_SIZE:-25m}
     depends_on:
       frontend:
         condition: service_healthy

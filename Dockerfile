@@ -129,6 +129,39 @@ FROM openmrs/openmrs-core:2.8.x-amazoncorretto-21
 USER root
 RUN mkdir -p /usr/local/tomcat/conf/Catalina/localhost \
  && chown -R 1001:0 /usr/local/tomcat/conf
+
+# Tomcat rejects an oversized request body itself: the connector's maxPostSize
+# defaults to 2 MB and answers 413 (or truncates the multipart body) long before
+# the application ever sees the file. That is what makes a patient attachment
+# upload fail with "413 Request Entity Too Large" on
+# /openmrs/ws/rest/v1/attachment even when the gateway in front of it allows
+# far more, so the gateway's limit alone is not enough -- the smaller of the two
+# wins.
+#
+# 25 MB, matching the gateway's OMRS_MAX_UPLOAD_SIZE default. maxSwallowSize=-1
+# makes Tomcat read the whole rejected body before closing the connection, so an
+# over-limit upload fails with a clean 413 instead of a connection reset that the
+# browser reports as a network error with no explanation.
+#
+# Only the live 8080 connector is patched. server.xml also carries several
+# identical connector blocks inside XML comments as documentation; rewriting
+# those would be harmless but would break the comment as an example. The awk
+# script therefore tracks comment state and only edits outside comments.
+RUN awk '
+    /<!--/  { incomment = 1 }
+    !incomment && /<Connector port="8080"/ && !patched {
+        print
+        print "               maxPostSize=\"26214400\""
+        print "               maxSwallowSize=\"-1\""
+        patched = 1
+        next
+    }
+    { print }
+    /-->/ { incomment = 0 }
+  ' /usr/local/tomcat/conf/server.xml > /usr/local/tomcat/conf/server.xml.new \
+ && grep -q maxPostSize /usr/local/tomcat/conf/server.xml.new \
+ && mv /usr/local/tomcat/conf/server.xml.new /usr/local/tomcat/conf/server.xml \
+ && chown 1001:0 /usr/local/tomcat/conf/server.xml
 USER 1001
 
 COPY --from=dev /openmrs/distribution/openmrs_core/openmrs.war /openmrs/distribution/openmrs_core/

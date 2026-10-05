@@ -23,6 +23,11 @@ dump.sql
 frontend/src/main/resources/*
 !frontend/src/main/resources/.gitkeep
 gateway/*.conf
+# nginx.conf is not a generated artefact: it is the gateway image's main
+# configuration and a required build input (see gateway/Dockerfile). The
+# generated one is the rendered /etc/nginx/conf.d/default.conf inside the
+# container, which is never in this directory.
+!gateway/nginx.conf
 
 # LLM coding agent documentation
 CLAUDE.md
