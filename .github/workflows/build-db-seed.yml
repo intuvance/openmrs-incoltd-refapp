@@ -225,7 +225,7 @@ jobs:
 
       - name: Push the seed image
         if: github.event_name != 'schedule'
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           context: deployment/db
           push: true
