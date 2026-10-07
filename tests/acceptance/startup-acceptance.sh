@@ -19,8 +19,8 @@
 #
 # Exits non-zero on the first failed check, and prints the failing check plus the
 # relevant container logs, so a failure is diagnosable without a rerun. Startup
-# errors are never swallowed: if the backend does not become healthy, the backend
-# and db-init logs are dumped and the script fails.
+# errors are never swallowed: if the backend does not become healthy, the backend,
+# db-init, db-verify and db logs are dumped and the script fails.
 # ---------------------------------------------------------------------------
 set -euo pipefail
 
@@ -175,6 +175,8 @@ dump_logs() {
     compose logs --no-color --tail=200 backend || true
     echo "=================== db-init logs =============================="
     compose logs --no-color --tail=200 db-init || true
+    echo "=================== db-verify logs ============================"
+    compose logs --no-color --tail=200 db-verify || true
     echo "=================== db logs (last 100) ========================"
     compose logs --no-color --tail=100 db || true
     echo "============================================================="
@@ -326,6 +328,32 @@ check_database_and_terminology() {
         "SELECT COUNT(*) FROM concept_set WHERE concept_set IS NOT NULL" 1
     assert_at_least "concepts have a datatype" \
         "SELECT COUNT(DISTINCT datatype_id) FROM concept" 1
+
+    # The thresholds above are satisfied even by a badly damaged install, so
+    # these four assert the specific invariant that a first boot violates.
+    #
+    # openmrs-module-initializer's MappingsConceptLineProcessor clears
+    # concept.getConceptMappings() for every concept a content package loads and
+    # re-adds only what that package's "Same as mappings" column declares, which
+    # for this distribution is nothing. The seed's 18,882 mappings become 724 and
+    # nothing is logged. db-verify repairs it; these assert the repair held.
+    assert_sql "no concept reference mapping was lost" \
+        "SELECT IF((SELECT COUNT(*) FROM concept_reference_map)
+                 >= (SELECT COUNT(*) FROM openmrs_concept_map_archive), 'yes', 'no')" yes
+    assert_at_least "concept mappings span several map types" \
+        "SELECT COUNT(DISTINCT concept_map_type_id) FROM concept_reference_map" 3
+    assert_zero "no concept mapping points at a deleted concept or term" \
+        "SELECT COUNT(*) FROM concept_reference_map m
+           LEFT JOIN concept c ON c.concept_id = m.concept_id
+           LEFT JOIN concept_reference_term t ON t.concept_reference_term_id = m.concept_reference_term_id
+          WHERE c.concept_id IS NULL OR t.concept_reference_term_id IS NULL"
+    # concept.is_set is what Concept.getSetMembers() reads. With it clear,
+    # OrderService resolves no drug route, dosing or dispensing unit, so every
+    # drug order fails validation and the Orders widget stays empty.
+    assert_zero "every concept with set members is flagged is_set" \
+        "SELECT COUNT(*) FROM concept c
+          WHERE c.is_set = 0
+            AND EXISTS (SELECT 1 FROM concept_set s WHERE s.concept_set = c.concept_id)"
 }
 
 check_ocl_does_not_block() {
@@ -411,6 +439,48 @@ check_core_metadata_intact() {
     assert_at_least "roles are present"                 "SELECT COUNT(*) FROM role" 1
     assert_at_least "privileges are present"            "SELECT COUNT(*) FROM privilege" 1
     assert_at_least "forms are present"                 "SELECT COUNT(*) FROM form" 1
+}
+
+# Order entry depends on concept sets being *usable*, not merely populated.
+# Concept.getSetMembers() returns an empty list when concept.is_set is 0, and
+# OrderService reads the drug routes, dosing units and dispensing units through
+# it. With the flag clear, DrugOrder validation rejects every drug order with
+# DrugOrder.error.routeNotAmongAllowedConcepts, so no drug order can be saved
+# and the Orders widget in the patient chart reads "No results to display".
+#
+# `concept_set` having rows is not sufficient evidence on its own: the seed dump
+# ships the members while leaving is_set = 0, so the metadata looks complete to a
+# row count and is still unusable. Assert the flag, which is what is read.
+check_order_entry_usable() {
+    echo
+    echo "== order entry is usable =="
+
+    assert_zero "no set concept is missing the is_set flag" \
+        "SELECT COUNT(*) FROM concept c
+          WHERE c.is_set = 0
+            AND EXISTS (SELECT 1 FROM concept_set cs WHERE cs.concept_set = c.concept_id)"
+
+    # The three sets DrugOrder validation consults, named by the global
+    # properties the validator reads. Resolved by UUID through the properties
+    # rather than hard-coded concept ids so the check follows the site's
+    # configuration.
+    assert_at_least "drug routes are selectable" \
+        "SELECT COUNT(*) FROM concept_set cs
+          JOIN concept c ON c.concept_id = cs.concept_set
+          JOIN global_property g ON g.property = 'order.drugRoutesConceptUuid'
+                                AND c.uuid = g.property_value" 1
+
+    assert_at_least "drug dosing units are selectable" \
+        "SELECT COUNT(*) FROM concept_set cs
+          JOIN concept c ON c.concept_id = cs.concept_set
+          JOIN global_property g ON g.property = 'order.drugDosingUnitsConceptUuid'
+                                AND c.uuid = g.property_value" 1
+
+    assert_at_least "drug dispensing units are selectable" \
+        "SELECT COUNT(*) FROM concept_set cs
+          JOIN concept c ON c.concept_id = cs.concept_set
+          JOIN global_property g ON g.property = 'order.drugDispensingUnitsConceptUuid'
+                                AND c.uuid = g.property_value" 1
 }
 
 check_login_location() {
@@ -674,6 +744,7 @@ scenario_clean() {
     check_ocl_does_not_block
     check_no_demo_data
     check_core_metadata_intact
+    check_order_entry_usable
     check_login_location
     check_site_metadata
     check_modules_and_owas
