@@ -215,34 +215,44 @@ machine — the commands are not interchangeable.
 ```bash
 cp .env.example .env
 $EDITOR .env                      # set OMRS_DB_PASSWORD and MYSQL_ROOT_PASSWORD
-docker compose build              # builds backend, frontend and gateway
+docker compose build              # builds all four images below
 docker compose up -d
 ```
 
-Where each image comes from:
+Where each image comes from. All four application images are built under their
+final names, so there is nothing to tag afterwards and `docker images` lists each
+one once:
 
-| Image                                   | Obtained by                                        |
-| --------------------------------------- | -------------------------------------------------- |
-| `…-backend:3.7.1-no-demo`               | built — `docker compose build backend`             |
-| `…-frontend:3.7.1`                      | built — `docker compose build frontend`            |
-| `…-gateway:3.7.1`                       | built — `docker compose build gateway`             |
-| `mariadb:10.11.7`                       | pulled, digest-pinned from `.env`                  |
-| seed, used by `db-init` and `db-verify` | pulled — `ghcr.io/intuvance/openmrs-db-seed:3.7.1` |
+| Image                                                | Obtained by                        |
+| ---------------------------------------------------- | ---------------------------------- |
+| `intuvance/openmrs-backend:3.7.1`                   | built                              |
+| `intuvance/openmrs-frontend:3.7.1`                  | built                              |
+| `intuvance/openmrs-gateway:3.7.1`                   | built                              |
+| `intuvance/openmrs-db-seed:3.7.1`                   | built — needs `seed.sql`, see below |
+| `mariadb:10.11.7`                                   | pulled, digest-pinned from `.env`  |
+
+MariaDB is the exception and always will be: it is the upstream official image,
+not something built from this repository, so there is no Dockerfile for it and
+`docker compose build` cannot produce it. A fresh deployment fetches it from a
+registry whatever it is called. Its `@sha256:` digest is what makes that fetch
+reproducible — it cannot be swapped after the `.env` is written — so it is
+deliberately left naming an upstream artifact rather than being renamed to
+`intuvance/`. To remove the Docker Hub dependency entirely, mirror the image into
+your own registry and repoint `OMRS_MARIADB_IMAGE` at the mirror by digest.
 
 Three things that are easy to get wrong here:
 
-- **The three application images build only because `docker-compose.override.yml`
+- **The application images build only because `docker-compose.override.yml`
   exists.** Compose loads that file automatically and it is what supplies the
   `build:` sections; the base `docker-compose.yml` has none. Without the override
   in play, `docker compose build` succeeds while building nothing and
-  `up -d` then fails on a missing image. The override also retags the built
-  images to the names in `.env`, so the two must agree.
-- **The seed image cannot be built from a fresh checkout.** `deployment/db/Dockerfile`
-  needs `seed.sql`, a full database dump, and that dump is gitignored. It is
-  produced by `.github/workflows/build-db-seed.yml` and published to ghcr, which
-  is what the pull in the table above gets you. If you have pointed
-  `OMRS_DB_SEED_IMAGE` at a local tag instead, you must already have built that
-  image — see [Database and CIEL](#database-and-ciel) for the procedure.
+  `up -d` then fails on a missing image.
+- **The seed image needs a `seed.sql` you already have.** `deployment/db/Dockerfile`
+  copies a full database dump, and that dump is gitignored, so this build only
+  succeeds on a machine that has one — see
+  [Database and CIEL](#database-and-ciel) for how it is produced. Without it the
+  seed step fails and `up -d` stops at a missing image, because `db-init` and
+  `db-verify` both need it before the backend can start.
 - **The backend build runs Maven inside the image** (`mvn -Pdistro,no-demo
 install`). The reactor builds `content-packages/` **before** `distro/`,
   because the OpenMRS SDK resolves content packages as Maven artifacts and so
@@ -273,7 +283,7 @@ the backend has to be invoked directly:
 
 ```bash
 docker build --secret id=m2settings,src=$HOME/.m2/settings.xml \
-  -t openmrs/openmrs-reference-application-3-backend:3.7.1-no-demo .
+  -t intuvance/openmrs-backend:3.7.1 .
 ```
 
 The tag must match `OMRS_BACKEND_IMAGE` in `.env`, or Compose will not use it.
@@ -416,29 +426,6 @@ by project label), but `docker volume rm` needs the exact name.
 
 Set `OMRS_NAME_PREFIX` to run a second copy of the stack on one host, e.g.
 `OMRS_NAME_PREFIX=omrs-staging`.
-
-### Readable image names
-
-The images carry upstream-style tags (`openmrs/openmrs-reference-application-3-backend:3.7.1-no-demo`),
-which obscure the fact that they are locally built and have to be looked up to
-interpret. After a build, add short, self-describing tags:
-
-```bash
-deployment/tag-images.sh            # tag the images .env points at
-deployment/tag-images.sh --check    # report what would be tagged, tag nothing
-```
-
-| Built as                                                        | Tagged as                          |
-| --------------------------------------------------------------- | ---------------------------------- |
-| `openmrs/openmrs-reference-application-3-backend:3.7.1-no-demo` | `intuvance/openmrs-backend:3.7.1`  |
-| `openmrs/openmrs-reference-application-3-frontend:3.7.1`        | `intuvance/openmrs-frontend:3.7.1` |
-| `openmrs/openmrs-reference-application-3-gateway:3.7.1`         | `intuvance/openmrs-gateway:3.7.1`  |
-| `openmrs-db-seed:local`                                         | `intuvance/openmrs-db-seed:3.7.1`  |
-
-The tags are additive: the original references are kept, so `docker-compose.yml`,
-the CI workflows and any documentation pointing at them keep resolving to the
-same image id. Digest-pinned registry references are skipped rather than
-relabelled, because a registry image is not a local build.
 
 ---
 

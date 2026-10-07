@@ -1,22 +1,28 @@
 # Local development override: build the stack images from this repository
 # instead of pulling them.
 #
-#   docker compose up --build
+#   docker compose build
+#   docker compose up -d
 #
-# The base docker-compose.yml pins every image by digest for reproducibility; this
-# override replaces the three application images with local builds of the same
-# sources. The database seed image is deliberately NOT overridden: it is a
-# prebuilt artifact, and rebuilding it requires booting a database, which is what
-# .github/workflows/build-db-seed.yml is for.
+# The base docker-compose.yml names each image by an OMRS_*_IMAGE variable in
+# .env. This override adds the build contexts and nothing else: the name an image
+# is built under comes from .env, so there is exactly one place to change it and no
+# second copy to drift.
+#
+# .env points these at intuvance/openmrs-<component>:<OMRS_DISTRO_VERSION>. An
+# earlier version of this file named the images here instead, and the images were
+# therefore built under the upstream-looking openmrs/openmrs-reference-application-3-*
+# names and then given a second, readable tag by deployment/tag-images.sh. That
+# left two tags per image pointing at one image id, so `docker images` listed
+# everything twice, and the duplicate had to be kept in step forever. Building
+# under the final name removes the need for the second tag entirely.
 
 services:
   gateway:
-    image: ${OMRS_GATEWAY_IMAGE:-openmrs/openmrs-reference-application-3-gateway:local}
     build:
       context: ./gateway
 
   frontend:
-    image: ${OMRS_FRONTEND_IMAGE:-openmrs/openmrs-reference-application-3-frontend:local}
     build:
       # Repository root, not ./frontend. The frontend image must ship the SITE's
       # SPA config (the queue concept UUIDs, logo and brand colours), which lives
@@ -28,6 +34,18 @@ services:
       dockerfile: frontend/Dockerfile
 
   backend:
-    image: ${OMRS_BACKEND_IMAGE:-openmrs/openmrs-reference-application-3-backend:local}
     build:
       context: .
+
+  # The pre-populated database seed, built from deployment/db/ rather than pulled,
+  # so that a deployment seeded from this checkout runs against the terminology in
+  # this checkout. deployment/db/Dockerfile needs seed.sql, which is a database
+  # dump and is deliberately gitignored, so this builds only on a machine that
+  # has one; see deployment/db/README.md.
+  #
+  # Only db-init carries the build section. db-verify consumes the same image by
+  # name and has nothing to build, and `docker compose build` covers db-init.
+  db-init:
+    build:
+      context: ./deployment/db
+      dockerfile: Dockerfile
