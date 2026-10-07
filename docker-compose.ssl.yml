@@ -16,6 +16,13 @@ services:
       - certbot-data:/var/www/certbot
 
   gateway:
+    # No depends_on on certbot. certbot is a one-shot in dev mode -- it issues the
+    # certificate and exits 0 -- so a `condition: service_healthy` gate on it is
+    # satisfied only briefly and then can never be satisfied again, which leaves
+    # the gateway stuck in "Created" and never started. The wait is therefore in
+    # gateway/docker-entrypoint.sh, which polls for the certificate file itself
+    # and is correct whether certbot is still running, has finished, or never
+    # comes back.
     environment:
       CERT_WEB_DOMAINS: ${CERT_WEB_DOMAINS:-localhost,127.0.0.1}
       CERT_WEB_DOMAIN_COMMON_NAME: ${CERT_WEB_DOMAIN_COMMON_NAME:-}

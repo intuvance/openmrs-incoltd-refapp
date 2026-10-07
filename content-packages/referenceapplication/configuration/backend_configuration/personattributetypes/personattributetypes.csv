@@ -1,6 +1,1 @@
 Uuid,Void/Retire,Name,Description,Format,Foreign,Searchable
-14d4f066-15f5-102d-96e4-000c29c2a5d7,0,Telephone Number,The telephone number for the person,java.lang.String,,,
-8b56eac7-5c76-4b9c-8c6f-1deab8d3fc47,,Unknown patient,Used to flag patients that cannot be identified during the check-in process,java.lang.String,,,
-732d06ae-f03c-4f0a-9029-5b304fdaad1c,,Person Point Of Care Location,Person Point Of Care Location Attribute Type,java.lang.String,,,,
-4d3ce962-9330-4748-b14e-f81400ac7db5,,Person Point Of Care Migration,Person Point Of Care Migration Attribute Type,java.lang.String,,,,
-4e4390af-764c-4138-9307-838c10402e34,,Medical Practitioner,Medical Practitioner Attribute Type,java.lang.String,,,,
