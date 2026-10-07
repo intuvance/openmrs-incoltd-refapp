@@ -1,5 +1,1 @@
 Uuid,Void/Retire,Name,Description,_version:1
-7b0f5697-27e3-40c4-8bae-f4049abfb4ed,,Visit_Clinic,"Patient visits the clinic/hospital",
-d66e9fe0-7d51-4801-a550-5d462ad1c944,,Visit_Home,Provider visits the patient at their home,
-287463d3-2233-4c69-9851-5841a1f5e109,,Visit_Virtual,Virtual visit,
-a22733fa-3501-4020-a520-da024eeff088,,Visit_Tele,Visit type for teleconsultation features,

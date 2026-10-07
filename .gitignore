@@ -39,3 +39,7 @@ CLAUDE.md
 
 # Local build logs from long-running image builds.
 .build-logs/
+
+# Logs
+*.log  
+
