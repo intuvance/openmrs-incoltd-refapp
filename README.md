@@ -43,7 +43,7 @@ package, then as a module — in that order — and only then as custom code.
 ## Architecture
 
 ```text
-                 UPSTREAM OPENMRS
+                UPSTREAM OPENMRS
                        │
                        ▼
        Mainstream O3 Reference Application
@@ -200,21 +200,100 @@ Rules that follow from the table:
 
 ## Building
 
-### Everything, with Docker (recommended)
+Two scenarios, and they are genuinely different. Pick the one that matches your
+machine — the commands are not interchangeable.
+
+|                                         | **A. New machine** | **B. Already built**   |
+| --------------------------------------- | ------------------ | ---------------------- |
+| `docker images` lists `…-backend`       | no                 | yes                    |
+| `docker volume ls` lists `omrs-db-data` | no                 | yes                    |
+| You want to                             | build and start    | start                  |
+| Commands                                | see A below        | `docker compose up -d` |
+
+### A. A new machine with nothing built
 
 ```bash
-docker compose build
+cp .env.example .env
+$EDITOR .env                      # set OMRS_DB_PASSWORD and MYSQL_ROOT_PASSWORD
+docker compose build              # builds backend, frontend and gateway
+docker compose up -d
 ```
 
-This builds the backend image, which internally runs:
+Where each image comes from:
+
+| Image                                   | Obtained by                                        |
+| --------------------------------------- | -------------------------------------------------- |
+| `…-backend:3.7.1-no-demo`               | built — `docker compose build backend`             |
+| `…-frontend:3.7.1`                      | built — `docker compose build frontend`            |
+| `…-gateway:3.7.1`                       | built — `docker compose build gateway`             |
+| `mariadb:10.11.7`                       | pulled, digest-pinned from `.env`                  |
+| seed, used by `db-init` and `db-verify` | pulled — `ghcr.io/intuvance/openmrs-db-seed:3.7.1` |
+
+Three things that are easy to get wrong here:
+
+- **The three application images build only because `docker-compose.override.yml`
+  exists.** Compose loads that file automatically and it is what supplies the
+  `build:` sections; the base `docker-compose.yml` has none. Without the override
+  in play, `docker compose build` succeeds while building nothing and
+  `up -d` then fails on a missing image. The override also retags the built
+  images to the names in `.env`, so the two must agree.
+- **The seed image cannot be built from a fresh checkout.** `deployment/db/Dockerfile`
+  needs `seed.sql`, a full database dump, and that dump is gitignored. It is
+  produced by `.github/workflows/build-db-seed.yml` and published to ghcr, which
+  is what the pull in the table above gets you. If you have pointed
+  `OMRS_DB_SEED_IMAGE` at a local tag instead, you must already have built that
+  image — see [Database and CIEL](#database-and-ciel) for the procedure.
+- **The backend build runs Maven inside the image** (`mvn -Pdistro,no-demo
+install`). The reactor builds `content-packages/` **before** `distro/`,
+  because the OpenMRS SDK resolves content packages as Maven artifacts and so
+  needs the site package in the local repository before the distro module runs.
+
+#### The `m2settings` build secret (build speed only)
+
+The backend build mounts a Maven settings file from a build secret. The secret is
+**optional**: BuildKit skips the mount when it is not supplied, and the
+`openmrs-core` base image's own `settings-docker.xml` is used instead.
+
+That substitution has a cost worth knowing about, because it is silent. The base
+image's file pins
+
+```xml
+<localRepository>/usr/share/maven/ref/repository</localRepository>
+```
+
+whereas the settings file CI generates pins no `localRepository`, so Maven falls
+back to `~/.m2/repository` — which is exactly the BuildKit cache mount the
+`Dockerfile` declares. Without the secret, the ~130 MB platform WAR and the ~30
+module artifacts are re-downloaded on **every** rebuild, turning a short
+incremental build into a long one. The build still succeeds either way, so the
+symptom is only slowness.
+
+`docker compose build` has no `--secret` flag, so a local fast-rebuild build of
+the backend has to be invoked directly:
 
 ```bash
-mvn -Pdistro install
+docker build --secret id=m2settings,src=$HOME/.m2/settings.xml \
+  -t openmrs/openmrs-reference-application-3-backend:3.7.1-no-demo .
 ```
 
-The reactor builds `content-packages/` **before** `distro/`, because the OpenMRS
-SDK resolves content packages as Maven artifacts and therefore needs the site
-package in the local repository before the distro module runs.
+The tag must match `OMRS_BACKEND_IMAGE` in `.env`, or Compose will not use it.
+CI wires the same secret up in `.github/workflows/build-backend.yml`.
+
+### B. A machine that already has the images
+
+If the images exist and the database volume exists, there is nothing to build:
+
+```bash
+docker compose up -d
+```
+
+No `--build`. The images already contain the pinned module set, and the existing
+`omrs-db-data` volume is reused, so `db-init` finds the seeded terminology in
+place and skips the dump restore entirely.
+
+Use this same command for every subsequent start, restart and redeploy. Add
+`--build` only after changing something under `distro/`, `content-packages/`,
+`gateway/` or `frontend/`.
 
 ### Just the Maven build
 
@@ -254,10 +333,13 @@ by digest in `.env`. To move a dependency, change one property and rebuild.
 ## Running
 
 ```bash
-cp .env.example .env
-$EDITOR .env                 # set OMRS_DB_PASSWORD and MYSQL_ROOT_PASSWORD
 docker compose up -d
 ```
+
+On a machine that has never run this stack, build first — see
+[scenario A](#a-a-new-machine-with-nothing-built). `.env` must exist with real
+values for `OMRS_DB_PASSWORD` and `MYSQL_ROOT_PASSWORD`; Compose refuses to start
+otherwise.
 
 | Surface          | URL                                          |
 | ---------------- | -------------------------------------------- |
@@ -268,6 +350,10 @@ docker compose up -d
 First startup on a seeded database takes a few minutes: the Initializer applies
 every content package. It is bounded work, not a download — see
 [CIEL/OCL](#database-and-ciel).
+
+`docker compose ps` will list `db-init` and `db-verify` as `Exited (0)`. That is
+success: both are one-shot jobs, and `db-init` exits as soon as it has confirmed
+the seeded terminology is intact.
 
 ```bash
 docker compose ps
@@ -303,12 +389,12 @@ derived from this directory, long, truncated, and different on every machine or
 checkout — which produced names like
 `openmrs-distro-referenceapplication-371_db-data`:
 
-| Volume               | Holds                                              |
-| -------------------- | -------------------------------------------------- |
-| `omrs-db-data`       | the clinical record — **back this up**             |
-| `omrs-openmrs-data`  | uploads and Initializer config state — back this up |
-| `omrs-letsencrypt-data` | TLS private keys — back this up (SSL only)     |
-| `omrs-certbot-data`  | ACME challenges (SSL only)                         |
+| Volume                  | Holds                                               |
+| ----------------------- | --------------------------------------------------- |
+| `omrs-db-data`          | the clinical record — **back this up**              |
+| `omrs-openmrs-data`     | uploads and Initializer config state — back this up |
+| `omrs-letsencrypt-data` | TLS private keys — back this up (SSL only)          |
+| `omrs-certbot-data`     | ACME challenges (SSL only)                          |
 
 The SSL and Grafana overlays are named the same way, so the whole stack is
 recognisable at a glance.
@@ -342,12 +428,12 @@ deployment/tag-images.sh            # tag the images .env points at
 deployment/tag-images.sh --check    # report what would be tagged, tag nothing
 ```
 
-| Built as                                          | Tagged as                        |
-| ------------------------------------------------- | -------------------------------- |
-| `openmrs/openmrs-reference-application-3-backend:3.7.1-no-demo` | `intuvance/openmrs-backend:3.7.1` |
-| `openmrs/openmrs-reference-application-3-frontend:3.7.1` | `intuvance/openmrs-frontend:3.7.1` |
-| `openmrs/openmrs-reference-application-3-gateway:3.7.1` | `intuvance/openmrs-gateway:3.7.1` |
-| `openmrs-db-seed:local`                           | `intuvance/openmrs-db-seed:3.7.1` |
+| Built as                                                        | Tagged as                          |
+| --------------------------------------------------------------- | ---------------------------------- |
+| `openmrs/openmrs-reference-application-3-backend:3.7.1-no-demo` | `intuvance/openmrs-backend:3.7.1`  |
+| `openmrs/openmrs-reference-application-3-frontend:3.7.1`        | `intuvance/openmrs-frontend:3.7.1` |
+| `openmrs/openmrs-reference-application-3-gateway:3.7.1`         | `intuvance/openmrs-gateway:3.7.1`  |
+| `openmrs-db-seed:local`                                         | `intuvance/openmrs-db-seed:3.7.1`  |
 
 The tags are additive: the original references are kept, so `docker-compose.yml`,
 the CI workflows and any documentation pointing at them keep resolving to the
@@ -873,20 +959,20 @@ person count is unchanged across an image update.
 
 Health checks, and what each one actually proves:
 
-| Service    | Check                                           | Proves                                                                   |
-| ---------- | ----------------------------------------------- | ------------------------------------------------------------------------ |
-| `db`       | `healthcheck.sh --connect --innodb_initialized` | MariaDB is accepting connections with a usable InnoDB                    |
-| `backend`  | `GET /openmrs/initialsetup`                     | the WAR is deployed, the datasource is reachable and the modules started |
-| `frontend` | `GET /`                                         | the O3 shell is being served                                             |
-| `gateway`  | `GET /nginx-health`                             | routing is up                                                            |
-| `db-init`  | exit code                                       | initialisation completed; a non-zero exit blocks the backend             |
-| `db-verify`| exit code                                       | terminology is whole; a non-zero exit means the install is degraded       |
+| Service     | Check                                           | Proves                                                                   |
+| ----------- | ----------------------------------------------- | ------------------------------------------------------------------------ |
+| `db`        | `healthcheck.sh --connect --innodb_initialized` | MariaDB is accepting connections with a usable InnoDB                    |
+| `backend`   | `GET /openmrs/initialsetup`                     | the WAR is deployed, the datasource is reachable and the modules started |
+| `frontend`  | `GET /`                                         | the O3 shell is being served                                             |
+| `gateway`   | `GET /nginx-health`                             | routing is up                                                            |
+| `db-init`   | exit code                                       | initialisation completed; a non-zero exit blocks the backend             |
+| `db-verify` | exit code                                       | terminology is whole; a non-zero exit means the install is degraded      |
 
 The backend check deliberately targets `/openmrs/initialsetup` rather than a TCP
 port: a 200 there means startup is genuinely complete, not merely that a process
 is alive.
 
-`db-verify` is deliberately *not* a dependency of `frontend` or `gateway`. A hard
+`db-verify` is deliberately _not_ a dependency of `frontend` or `gateway`. A hard
 gate would take the site down when the check fails, and an operator who cannot
 reach the login page cannot read the message explaining why. It fails loudly
 instead: `docker compose ps` shows the service exited non-zero, and
@@ -1050,15 +1136,17 @@ docker compose build gateway && docker compose up -d gateway
 ```
 
 **`ClassNotFoundException` for an appointments scheduler task on first boot**
+
 ```
 Failed to schedule task Reminder of scheduled appointment
 Caused by: ClassNotFoundException:
   org.openmrs.module.appointments.scheduler.tasks.ReminderForAppointment
 ```
+
 Expected on the **first** startup only, and harmless — ignore it. It is a
 startup-ordering race, not a version mismatch and not a data problem:
 
-- The class *is* present. It lives in `lib/appointments-api-*.jar` inside
+- The class _is_ present. It lives in `lib/appointments-api-*.jar` inside
   `appointments-<version>.omod`, and the names in `scheduler_task_config` match it
   exactly.
 - On first boot OpenMRS cycles the appointments module while the scheduler runs,
@@ -1078,10 +1166,12 @@ appointment reminders and missed/complete marking, and the module only recreates
 them against a fresh database.
 
 **Address hierarchy configuration not loaded**
+
 ```
 Address hierarchy configuration file appears invalid, skipping the loading process:
   /openmrs/data/configuration/addresshierarchy/addressConfiguration.xml
 ```
+
 The file is present but one directory too deep. The SDK assembles
 `openmrs_config` with each content package under its own subdirectory
 (`addresshierarchy/siteconfiguration/addressConfiguration.xml`), while the
@@ -1091,9 +1181,11 @@ overlays the site's `addresshierarchy` files flat to satisfy it. If this error
 appears, the running image predates that change — rebuild the backend.
 
 **Multiple disposition files found in the disposition configuration directory**
+
 ```
 Multiple disposition files found in the disposition configuration directory.
 ```
+
 The site's configuration is duplicated because the image was built with the demo
 profile, which adds `openmrs-content-referenceapplication-demo` and therefore a
 second copy of `dispositionConfig.json` under a second namespace.
