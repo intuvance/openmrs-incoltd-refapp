@@ -104,10 +104,13 @@ jobs:
       - name: Verify the purge preserved core metadata
         run: |
           set -o pipefail
-          read -r CONCEPTS CRM LOCATIONS VISIT_TYPES ENC_TYPES DRUGS OBS PERSONS ADMINS DAEMONS <<<"$(docker exec \
+          read -r CONCEPTS CRM LOCATIONS VISIT_TYPES ENC_TYPES DRUGS MAPS \
+                MAPTYPES MAPTYPES_DEFINED OBS PERSONS ADMINS DAEMONS <<<"$(docker exec \
             seed-source mariadb -N -B -uopenmrs -popenmrs openmrs -e "
               SELECT (SELECT COUNT(*) FROM concept),
                      (SELECT COUNT(*) FROM concept_reference_map),
+                     (SELECT COUNT(DISTINCT concept_map_type_id) FROM concept_reference_map),
+                     (SELECT COUNT(*) FROM concept_map_type),
                      (SELECT COUNT(*) FROM location),
                      (SELECT COUNT(*) FROM visit_type),
                      (SELECT COUNT(*) FROM encounter_type),
@@ -116,6 +119,7 @@ jobs:
                      (SELECT COUNT(*) FROM person),
                      (SELECT COUNT(*) FROM users WHERE username = 'admin'),
                      (SELECT COUNT(*) FROM users WHERE username = 'daemon');")"
+
 
           fail=0
           # Demo data must be gone.
@@ -130,6 +134,25 @@ jobs:
           [ "${VISIT_TYPES}" -gt 0 ] || { echo "::error::no visit types"; fail=1; }
           [ "${ENC_TYPES}" -gt 0 ]   || { echo "::error::no encounter types"; fail=1; }
           [ "${DRUGS}" -gt 0 ]       || { echo "::error::no drugs"; fail=1; }
+          # concept_reference_map is the table the Initializer destroys on first
+          # boot, so its contents are the entire basis of the repair performed by
+          # deployment/db/concept-map-repair.sql. A seed that cannot supply a
+          # complete mapping set makes that repair impossible, and the failure it
+          # prevents is silent: OpenMRS starts cleanly and only the features that
+          # resolve a concept by an external code come back empty.
+          #
+          # MAPTYPES is the second assertion because a plausible-looking row
+          # count can mean the wrong thing. The seed maps CIEL across many map
+          # types (SAME-AS, NARROWER-THAN, BROADER-THAN, and the OCL semantic
+          # types). One map type means the mappings were replaced, not merely
+          # thinned, and no repair can restore that.
+          [ "${MAPS}" -gt 15000 ] || {
+            echo "::error::only ${MAPS} concept reference mappings; the repair of the"
+            echo "::error::Initializer's first-boot deletion needs a complete set"
+            fail=1; }
+          [ "${MAPTYPES}" -ge 3 ] || {
+            echo "::error::concept mappings span only ${MAPTYPES} map type(s)"
+            fail=1; }
           # The system users must survive. The daemon user owns the metadata
           # audit trail -- it is the creator of ~4400 concepts, every location
           # and every person -- so a seed without it restores cleanly and then
@@ -146,6 +169,8 @@ jobs:
             echo "|---|---|"
             echo "| concepts | ${CONCEPTS} |"
             echo "| concept reference mappings (CIEL) | ${CRM} |"
+            echo "| concept map types in use | ${MAPTYPES} |"
+            echo "| concept map types defined | ${MAPTYPES_DEFINED} |"
             echo "| locations | ${LOCATIONS} |"
             echo "| visit types | ${VISIT_TYPES} |"
             echo "| encounter types | ${ENC_TYPES} |"
@@ -155,6 +180,28 @@ jobs:
             echo "| admin superuser (must be 1) | ${ADMINS} |"
             echo "| daemon system user (must be 1) | ${DAEMONS} |"
           } >> "${GITHUB_STEP_SUMMARY}"
+
+      - name: Verify the exported dump still carries the mappings
+        run: |
+          # Asserted against the exported artefact rather than the live container.
+          # Everything above can pass and still ship a truncated dump, and this is
+          # the last point at which that is visible without a deployment.
+          #
+          # The row count is read out of the dump itself rather than compared
+          # against the live database, because the dump is what a deployment
+          # actually restores. Counting statement bodies rather than statements
+          # keeps this independent of wherever mysqldump chooses to break lines.
+          set -o pipefail
+          MAPS=$(python3 -c "
+          import re
+          data = open('deployment/db/seed.sql', 'rb').read().decode('utf-8', 'replace')
+          print(sum(s.count(chr(10) + '(') for s in re.findall(r'INSERT INTO .concept_reference_map.[^;]*;', data, re.S)))
+          ")
+          [ "${MAPS}" -gt 15000 ] || {
+            echo "::error::the exported dump carries only ${MAPS} concept reference mappings"
+            echo "::error::deployment/db/concept-map-repair.sql cannot restore what the dump omits"
+            exit 1; }
+          echo "dump carries ${MAPS} concept reference mappings"
 
       - name: Export the sanitised dump
         run: |

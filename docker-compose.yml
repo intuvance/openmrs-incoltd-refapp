@@ -174,10 +174,54 @@ services:
       OMRS_DB_SEED_PASSWORD: ${OMRS_DB_SEED_PASSWORD:-openmrs}
       OMRS_DB_PURGE_AFTER_SEED: ${OMRS_DB_PURGE_AFTER_SEED:-false}
     volumes:
-      # The job script and the purge tool, read-only.
+      # The job script, the repair tool and the purge tool, read-only.
       - ./deployment/db/seed.sh:/usr/local/bin/seed.sh:ro
+      - ./deployment/db/concept-map-repair.sql:/usr/local/share/concept-map-repair.sql:ro
       - ./deployment/db/purge-demo-data.sql:/usr/local/share/purge-demo-data.sql:ro
     entrypoint: ["/bin/bash", "/usr/local/bin/seed.sh"]
+    networks:
+      - openmrs-network
+
+  # --- deployment: terminology integrity gate ---------------------------------
+  # Runs after the backend is healthy, so it always observes the database in the
+  # post-startup state, which is the state that matters. Then repairs what the
+  # startup destroyed and fails the deployment if the install is still not whole.
+  #
+  # It exists because OpenMRS destroys the seed's concept reference mappings on
+  # first boot and reports nothing: see deployment/db/concept-map-repair.sql for
+  # the mechanism and deployment/db/verify-terminology.sh for the gate. Without
+  # this job a first run produces an install that looks fine and quietly fails
+  # every feature that resolves a concept by an external code.
+  #
+  # It uses the seed image rather than a dedicated tooling image because that image
+  # is already MariaDB-based and therefore already carries the `mariadb` client --
+  # and, uniquely, the seed dump. That dump is what lets the job recover
+  # deployments created before it existed, whose mappings are already gone.
+  #
+  # Deliberately NOT a dependency of `frontend` or `gateway`. A hard gate would
+  # take the whole site down when this job fails, and an operator who cannot reach
+  # the login page cannot read the message explaining why. The failure is still
+  # loud: `docker compose ps` shows the service exited non-zero and its logs carry
+  # the diagnosis.
+  db-verify:
+    container_name: "${OMRS_NAME_PREFIX:-omrs}-db-verify"
+    image: ${OMRS_DB_SEED_IMAGE:?set OMRS_DB_SEED_IMAGE in .env}
+    restart: "no"
+    depends_on:
+      backend:
+        condition: service_healthy
+    environment:
+      OMRS_DB_HOST: db
+      OMRS_DB_PORT: "3306"
+      OMRS_DB_NAME: ${OMRS_DB_NAME:-openmrs}
+      OMRS_DB_USER: ${OMRS_DB_USER:?set OMRS_DB_USER in .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?set MYSQL_ROOT_PASSWORD in .env}
+      OMRS_DB_SEED_FILE: /openmrs-seed/seed.sql
+      OMRS_DB_REPAIR_SQL: /usr/local/share/concept-map-repair.sql
+    volumes:
+      - ./deployment/db/verify-terminology.sh:/usr/local/bin/verify-terminology.sh:ro
+      - ./deployment/db/concept-map-repair.sql:/usr/local/share/concept-map-repair.sql:ro
+    entrypoint: ["/bin/bash", "/usr/local/bin/verify-terminology.sh"]
     networks:
       - openmrs-network
 

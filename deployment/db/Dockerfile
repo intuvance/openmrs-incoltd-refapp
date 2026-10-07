@@ -27,6 +27,14 @@ COPY seed.sql /openmrs-seed/seed.sql
 COPY purge-demo-data.sql /openmrs-seed/purge-demo-data.sql
 COPY seed.sh /usr/local/bin/seed.sh
 
+# The concept reference mapping repair. Seeded by seed.sh before the backend can
+# boot and re-applied by the db-verify job, because the Initializer deletes these
+# rows on first boot. See deployment/db/concept-map-repair.sql for the mechanism.
+# Baked in rather than bind-mounted so the image is self-contained: the
+# mount in docker-compose.yml keeps a running deployment honest against edits,
+# but the image must not depend on it to be repairable.
+COPY concept-map-repair.sql /usr/local/share/concept-map-repair.sql
+
 # Documentation that travels with the artifact, so anyone who inspects the image
 # can see exactly what was removed and what was preserved.
 COPY README.md /openmrs-seed/README.md

@@ -105,6 +105,36 @@ COPY content-packages/referenceapplication/configuration/backend_configuration/a
 RUN cp -R /openmrs_distro/distro/target/sdk-distro/web/openmrs_modules /openmrs/distribution/openmrs_modules/
 RUN cp -R /openmrs_distro/distro/target/sdk-distro/web/openmrs_owas /openmrs/distribution/openmrs_owas
 
+# --- Initializer package guard ----------------------------------------------
+# A module's <package> is not cosmetic. OpenMRS resolves a module's
+# <require_module> entries by string-matching the required name against
+# Module.getPackageName(), with no fallback to the module id, so a module that
+# declares the right package under the wrong name is not started at all -- and it
+# is not started silently either: the dependent module is simply skipped with
+# "cannot be started because it requires the following module(s)", while the
+# Initializer itself runs happily.
+#
+# That is exactly what happened here. Initializer 2.12.1-intuvance.1 was published
+# under the Maven groupId io.github.intuvance and derived its <package> from those
+# coordinates, so it claimed io.github.intuvance.initializer while its classes were
+# and remain in org.openmrs.module.initializer. patientdocuments 1.1.0 requires
+# org.openmrs.module.initializer 2.9.0 and therefore never started. Nothing in the
+# build or in `docker compose up` failed.
+#
+# This asserts the invariant instead of trusting the coordinate, and fails the
+# build rather than shipping an image with a module that will not start. The
+# expected value is read from the omod's own <activator>, so the two cannot
+# disagree: OpenMRS loads the activator by that class name, so if the declared
+# package ever stopped matching the activator's package the module would fail to
+# start even with no dependents at all.
+#
+# python3 rather than unzip: the openmrs-core images have no unzip, and this runs
+# in the dev stage. The script also strips XML comments before reading the tags,
+# because config.xml contains prose that mentions <activator> by name.
+COPY deployment/verify-initializer-package.py /tmp/verify-initializer-package.py
+RUN python3 /tmp/verify-initializer-package.py \
+        /openmrs/distribution/openmrs_modules/initializer-*.omod
+
 # Clean up after copying needed artifacts
 RUN mvn $MVN_ARGS clean
 
@@ -147,7 +177,14 @@ RUN mkdir -p /usr/local/tomcat/conf/Catalina/localhost \
 # identical connector blocks inside XML comments as documentation; rewriting
 # those would be harmless but would break the comment as an example. The awk
 # script therefore tracks comment state and only edits outside comments.
-RUN awk '
+# The awk program is carried in a quoted heredoc rather than as a backslash-
+# continued RUN argument. The single-quoted awk program contains lines that must
+# not be joined and must not be expanded by the shell, and a plain multi-line RUN
+# is not valid Dockerfile at all -- the parser reads the second line of the awk
+# program as a new instruction and fails with "unknown instruction: /<!--/".
+RUN <<'TOMCAT_XML'
+set -eu
+awk '
     /<!--/  { incomment = 1 }
     !incomment && /<Connector port="8080"/ && !patched {
         print
@@ -158,10 +195,11 @@ RUN awk '
     }
     { print }
     /-->/ { incomment = 0 }
-  ' /usr/local/tomcat/conf/server.xml > /usr/local/tomcat/conf/server.xml.new \
- && grep -q maxPostSize /usr/local/tomcat/conf/server.xml.new \
- && mv /usr/local/tomcat/conf/server.xml.new /usr/local/tomcat/conf/server.xml \
- && chown 1001:0 /usr/local/tomcat/conf/server.xml
+  ' /usr/local/tomcat/conf/server.xml > /usr/local/tomcat/conf/server.xml.new
+grep -q maxPostSize /usr/local/tomcat/conf/server.xml.new
+mv /usr/local/tomcat/conf/server.xml.new /usr/local/tomcat/conf/server.xml
+chown 1001:0 /usr/local/tomcat/conf/server.xml
+TOMCAT_XML
 USER 1001
 
 COPY --from=dev /openmrs/distribution/openmrs_core/openmrs.war /openmrs/distribution/openmrs_core/

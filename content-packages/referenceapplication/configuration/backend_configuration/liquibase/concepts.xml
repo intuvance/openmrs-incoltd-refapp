@@ -32,10 +32,136 @@
         </sql>
     </changeSet>
 
-    <changeSet id="2025-10-02-12-45-PM-09" author="miirochristopher" runAlways="true">
+<changeSet id="2025-10-02-12-45-PM-09" author="miirochristopher" runAlways="true">
         <comment>
             Set concept 'Venous stasis ulcer of leg' UUID
         </comment>
-        <sql>UPDATE concept SET uuid = '0c0d2403-3c29-4a5b-96d3-79d7e5c5954b' WHERE concept_id = (SELECT DISTINCT concept_id from concept_name WHERE name='Venous stasis ulcer of leg');</sql>
+        <sql>UPDATE concept SET uuid = '0c0d2403-3c29-4c4e-96d3-79d7e5c5954b' WHERE concept_id = (SELECT DISTINCT concept_id from concept_name WHERE name='Venous stasis ulcer of leg');</sql>
+    </changeSet>
+
+    <changeSet id="2026-10-05-00-00-PM-30" author="intuvance" runAlways="true">
+        <comment>
+            Restore the concept.is_set flag for every concept that has set members.
+
+            concept.is_set is the flag Concept.getSet() reads. OrderService resolves
+            the drug routes, dosing units and dispensing units that a DrugOrder is
+            allowed to use by calling getSetMembers() on the concepts named by the
+            order.drugRoutesConceptUuid, order.drugDosingUnitsConceptUuid and
+            order.drugDispensingUnitsConceptUuid global properties, and that method
+            returns an empty list unless is_set = 1.
+
+            The seed dump ships is_set = 0 for every concept, including concepts
+            that do have members in concept_set. With the flag clear, DrugOrder
+            validation rejects every drug order with
+            DrugOrder.error.routeNotAmongAllowedConcepts /
+            DrugOrder.error.notAmongAllowedConcepts, so no drug order can be
+            saved and the Orders widget in the patient chart stays empty.
+
+            This is derived purely from concept_set, so it is idempotent and stays
+            correct as the terminology grows: any concept that acquires members
+            later is repaired on the next boot.
+        </comment>
+        <sql>
+            UPDATE concept c
+               SET c.is_set = 1
+             WHERE c.is_set = 0
+               AND EXISTS (SELECT 1 FROM concept_set cs WHERE cs.concept_set = c.concept_id);
+        </sql>
+    </changeSet>
+
+    <!-- ===================================================================
+         Concept reference mappings.
+
+         The Initializer destroys these. For every concept it loads from a
+         content package's concepts.csv,
+         org.openmrs.module.initializer.api.c.MappingsConceptLineProcessor.fill()
+         runs
+
+             if (!CollectionUtils.isEmpty(concept.getConceptMappings())) {
+                 concept.getConceptMappings().clear();
+             }
+
+         Clearing a Hibernate collection of ConceptMap deletes every row on
+         flush, and the processor then re-adds only the mappings named in the
+         CSV's "Same as mappings" column, which this package declares for no
+         concept. 18,882 seed mappings therefore become 724 on first boot, with
+         nothing logged at a level anyone reads.
+
+         The clear() is unconditional and the CSV grammar permits one mapping
+         per column, so the mappings cannot be restated in the content package.
+         Repairing them is the only available fix.
+
+         Ordering: the Initializer runs its LIQUIBASE domain before its CONCEPTS
+         domain, so these changesets run ahead of the deletion on boot one and
+         repair it on boot two, once the content package's checksum makes the
+         loader skip. The `db-verify` compose service
+         (deployment/db/verify-terminology.sh) closes that one-boot window and is
+         the authoritative gate; these changesets are the safety net for
+         deployments not driven by that compose file. The two changesets below
+         mirror the archive and replay logic in
+         deployment/db/concept-map-repair.sql. Keep them in step.
+         =================================================================== -->
+
+    <changeSet id="2026-10-06-00-00-PM-40" author="intuvance" runAlways="true">
+        <comment>
+            Archive the concept reference mappings, so the deletion performed by
+            the Initializer later in this same boot is reversible.
+
+            The archive is seeded by deployment/db/seed.sh immediately after the
+            seed dump is restored, which is the last moment the rows exist. This
+            changeset exists for the case where it does not run: INSERT IGNORE
+            makes it harmless when the archive is already populated, and it is
+            what lets an unmanaged deployment self-heal from the second boot.
+        </comment>
+        <sql>
+            CREATE TABLE IF NOT EXISTS openmrs_concept_map_archive (
+                uuid                      CHAR(38)  NOT NULL,
+                concept_id                INT(11)   NOT NULL,
+                concept_reference_term_id INT(11)   NOT NULL,
+                concept_map_type_id       INT(11)   NOT NULL,
+                date_created              DATETIME  NOT NULL,
+                PRIMARY KEY (uuid),
+                KEY archive_for_concept (concept_id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+        </sql>
+        <sql>
+            INSERT IGNORE INTO openmrs_concept_map_archive
+                (uuid, concept_id, concept_reference_term_id, concept_map_type_id, date_created)
+            SELECT m.uuid, m.concept_id, m.concept_reference_term_id,
+                   m.concept_map_type_id, m.date_created
+              FROM concept_reference_map m;
+        </sql>
+    </changeSet>
+
+    <changeSet id="2026-10-06-00-00-PM-41" author="intuvance" runAlways="true">
+        <comment>
+            Replay any archived concept reference mapping that is missing.
+
+            Keyed on uuid and matched with a LEFT JOIN, so a mapping that still
+            exists, even if the loader re-pointed it, is left untouched. Only
+            absence is repaired.
+
+            Foreign keys are disabled because the archive has no foreign keys of
+            its own and can outlive the terms it refers to; a stale archive row
+            must not abort the repair of the good ones.
+        </comment>
+        <sql>
+            SET FOREIGN_KEY_CHECKS = 0;
+        </sql>
+        <sql>
+            INSERT IGNORE INTO concept_reference_map
+                (uuid, concept_id, concept_reference_term_id, concept_map_type_id,
+                 creator, date_created)
+            SELECT a.uuid, a.concept_id, a.concept_reference_term_id,
+                   a.concept_map_type_id,
+                   COALESCE((SELECT u.user_id FROM users u WHERE u.username = 'daemon'), 1),
+                   a.date_created
+              FROM openmrs_concept_map_archive a
+              LEFT JOIN concept_reference_map m ON m.uuid = a.uuid
+             WHERE m.uuid IS NULL;
+        </sql>
+        <sql>
+            SET FOREIGN_KEY_CHECKS = 1;
+        </sql>
     </changeSet>
 </databaseChangeLog>

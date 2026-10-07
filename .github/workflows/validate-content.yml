@@ -14,12 +14,16 @@ on:
     paths:
       - 'content-packages/**'
       - 'distro/**'
+      - 'deployment/db/seed.sh'
       - 'tests/acceptance/validate-content-metadata.py'
+      - 'tests/acceptance/test-seed-integrity-gate.sh'
   pull_request:
     paths:
       - 'content-packages/**'
       - 'distro/**'
+      - 'deployment/db/seed.sh'
       - 'tests/acceptance/validate-content-metadata.py'
+      - 'tests/acceptance/test-seed-integrity-gate.sh'
   workflow_dispatch:
 
 permissions:
@@ -76,3 +80,39 @@ jobs:
               echo "demo package correctly excluded"
             fi
           done
+
+      - name: Confirm the patched Initializer is the one that will be bundled
+        run: |
+          # This is the single most damaging thing that can regress silently here.
+          #
+          # The OpenMRS SDK resolves each `omod.<id>` key using the coordinate
+          # `omod.<id>.groupId` when present, and falls back to groupId
+          # org.openmrs.module when it is not. So deleting one groupId line from a
+          # distro properties file does not fail the build and does not warn: the
+          # SDK quietly resolves the upstream Initializer again, and the next boot
+          # deletes every concept reference mapping in the seeded database.
+          # Nothing above WARN is logged, the healthcheck passes, and drug orders,
+          # lab orders, medication workflows and FHIR concept translation stop
+          # resolving.
+          #
+          # The pom and the properties files are checked together because either
+          # one alone is not sufficient: the dependency in the pom is what makes
+          # the artifact resolvable, and the properties entry is what tells the
+          # SDK which coordinate to fetch into openmrs_modules.
+          for props in distro/distro.properties distro/distro-no-demo.properties; do
+            echo "== ${props}"
+            grep -q '^omod\.initializer\.groupId=\${initializer\.groupId}$' "${props}" \
+              || { echo "::error::${props} does not set omod.initializer.groupId, so the SDK will resolve org.openmrs.module:initializer-omod and restore the destructive upstream behaviour"; exit 1; }
+          done
+
+          grep -q '<initializer\.groupId>io\.github\.intuvance</initializer\.groupId>' distro/pom.xml \
+            || { echo "::error::distro/pom.xml no longer pins the Initializer to the Intuvance fork"; exit 1; }
+          grep -q '<initializer\.version>2\.12\.1-intuvance\.2</initializer\.version>' distro/pom.xml \
+            || { echo "::error::distro/pom.xml pins an Initializer version that is not 2.12.1-intuvance.2. That release declares the wrong <package> in its omod, so every module depending on org.openmrs.module.initializer -- patientdocuments -- refuses to start. See deployment/db/README.md."; exit 1; }
+          grep -q 'groupId="io.github.intuvance" artifactId="initializer-omod"' distro/version-rules.xml \
+            || { echo "::error::the Initializer is not pinned in distro/version-rules.xml, so versions:update-properties can move the distro back to a destructive upstream release"; exit 1; }
+
+          echo "Initializer pinned to io.github.intuvance:initializer-omod 2.12.1-intuvance.2"
+
+      - name: Test the db-init terminology gate
+        run: tests/acceptance/test-seed-integrity-gate.sh

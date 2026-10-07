@@ -24,7 +24,27 @@
     <!-- track module versions
          we do so here so that we can utilise Maven to track updates, etc. -->
     <openmrs.version>2.8.8</openmrs.version>
-    <initializer.version>2.12.0</initializer.version>
+    <!-- The Initializer is the Intuvance fork, never upstream org.openmrs.module.
+         Upstream 2.12.0 destroys terminology on every first boot: the concept,
+         concept-set/answer, description and drug-reference-map processors each call
+         clear() on the Hibernate collections of every row they load, and then
+         re-add only what their CSV column declares. A seeded distro's concepts.csv
+         declares none of those columns, so 18,882 concept reference mappings are
+         deleted and never recreated, silently breaking every order, medication,
+         lab and FHIR concept-code lookup. The fork replaces that destructive rule
+         with a non-destructive one: a line that declares nothing leaves existing
+         data alone; a line that declares something still replaces it wholesale.
+         Pinned deliberately; see distro/version-rules.xml.
+
+         2.12.1-intuvance.1 is NOT usable. Its omod declared <package>
+         io.github.intuvance.initializer while the classes stayed in
+         org.openmrs.module.initializer, and OpenMRS resolves a module's
+         require_module dependencies by matching against that element with no
+         fallback to the module id. patientdocuments 1.1.0 requires
+         org.openmrs.module.initializer 2.9.0, so it silently refused to start.
+         2.12.1-intuvance.2 corrects the declaration. -->
+    <initializer.groupId>io.github.intuvance</initializer.groupId>
+    <initializer.version>2.12.1-intuvance.2</initializer.version>
     <fhir2.version>4.2.0</fhir2.version>
     <webservices.rest.version>3.5.0</webservices.rest.version>
     <addresshierarchy.version>2.21.0</addresshierarchy.version>
@@ -89,7 +109,7 @@
 
     <!-- Module dependencies -->
     <dependency>
-      <groupId>org.openmrs.module</groupId>
+      <groupId>${initializer.groupId}</groupId>
       <artifactId>initializer-omod</artifactId>
       <version>${initializer.version}</version>
       <scope>provided</scope>

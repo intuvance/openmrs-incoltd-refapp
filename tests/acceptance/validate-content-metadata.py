@@ -19,6 +19,11 @@ Checks
   4. The `ocl` domain contains no `*.zip`. A committed archive re-enables OCL as
      a first-boot terminology download, and openconceptlab throws during startup
      if its startup directory holds more than one file.
+  5. Every concept CSV row has the same number of fields as its header, and every
+     populated `Same as mappings` cell is a mapping expression. The Initializer
+     indexes columns positionally, so a single unquoted comma silently shifts a
+     row's remaining columns and writes the wrong value into the wrong column --
+     which is how a data type ends up declared as a concept mapping.
 
 Usage
   tests/acceptance/validate-content-metadata.py [package-root]
@@ -49,6 +54,24 @@ UUID_CANONICAL = re.compile(
 PLACEHOLDER = re.compile(r"^[0-9]+A+$", re.IGNORECASE)
 
 VAR_REFERENCE = re.compile(r"\$\{([^}]+)\}")
+
+# The concept mapping grammar accepted by
+# org.openmrs.module.initializer.api.c.MappingsConceptLineProcessor, as read from
+# its bytecode:
+#
+#   for each header column whose value is non-empty:
+#       split the *header* on '|'  -> parts[0] must be "mappings"
+#       split the *value*   on '|'  -> parts[1] is the map type name,
+#                                      parts[2] (optional) the concept source
+#       split parts[1..]    on ';'  -> the codes, each "<source>:<code>"
+#
+# So a populated cell looks like:
+#   mappings|same-as|CIEL:1234;5678
+# Anything else is silently ignored by the loader, which is precisely why it needs
+# checking here: a misplaced value costs a mapping with no diagnostic anywhere.
+MAPPING_CELL = re.compile(
+    r"^mappings\|[a-z0-9][a-z0-9 \-]*(\|[^|]+)?(\|[^|]*)?$", re.IGNORECASE
+)
 
 errors: list[str] = []
 warnings: list[str] = []
@@ -165,6 +188,105 @@ def check_global_properties(backend: str, declared: set[str]) -> None:
                     f"depends on it")
 
 
+def check_concept_rows(backend: str) -> None:
+    """Field alignment and mapping-cell grammar in the concepts domain.
+
+    Both checks exist because the failure is silent. The Initializer reads every
+    domain CSV positionally, and a value the loader does not recognise is skipped
+    rather than rejected, so a malformed row loads "successfully" having written the
+    wrong value into the wrong column.
+    """
+    concepts_dir = os.path.join(backend, "concepts")
+    if not os.path.isdir(concepts_dir):
+        return
+
+    for name in sorted(os.listdir(concepts_dir)):
+        if not name.endswith(".csv"):
+            continue
+        path = os.path.join(concepts_dir, name)
+
+        with open(path, newline="", encoding="utf-8-sig") as fh:
+            reader = csv.reader(fh)
+            try:
+                header = next(reader)
+            except StopIteration:
+                continue
+            header = [h.strip() for h in header]
+            width = len(header)
+            try:
+                mapping_col = header.index("Same as mappings")
+            except ValueError:
+                mapping_col = None
+            # The Initializer stamps an order index on every concept row it
+            # processes. It is also the last column, which makes it the one place a
+            # truncated row cannot hide: a row that lost a field to an unquoted
+            # comma ends up with a blank here, and a row that gained one ends up
+            # with something other than an integer.
+            order_col = None
+            for candidate in header:
+                if candidate.startswith("_order"):
+                    order_col = header.index(candidate)
+                    break
+
+            rows = [r for r in reader if any(f.strip() for f in r)]
+            populated = 0
+            if order_col is not None:
+                populated = sum(
+                    1 for r in rows
+                    if order_col < len(r) and r[order_col].strip()
+                )
+
+            for lineno, row in enumerate(rows, start=2):
+                if len(row) != width:
+                    # Report which column first disagrees, so the offending cell is
+                    # obvious. Without that, a wide row just looks "wrong somewhere".
+                    shown = 0
+                    for idx, value in enumerate(row):
+                        if idx < width and header[idx].strip().lower() == value.strip().lower() \
+                                and value.strip():
+                            shown = idx + 1
+                    hint = ""
+                    if shown:
+                        hint = (f" -- column {shown} ({header[shown - 1]!r}) holds "
+                                f"{row[shown - 1].strip()!r}, which looks like a "
+                                f"shifted neighbour")
+                    err(f"concepts/{name}:{lineno} has {len(row)} fields, the header "
+                        f"declares {width}. A comma inside an unquoted field shifts "
+                        f"every column after it and the row loads with the wrong "
+                        f"values in the wrong columns.{hint}")
+
+                if order_col is not None and order_col < len(row):
+                    cell = row[order_col].strip()
+                    if cell and not cell.isdigit():
+                        err(f"concepts/{name}:{lineno} column {order_col + 1} "
+                            f"({header[order_col]!r}) is {cell!r}, which is not an "
+                            f"integer. An earlier field has almost certainly shifted "
+                            f"into it.")
+                    elif not cell and rows and populated / max(len(rows), 1) >= 0.95:
+                        # Only reported when the column is populated essentially
+                        # everywhere else, so a file that legitimately omits it is
+                        # not flagged.
+                        err(f"concepts/{name}:{lineno} column {order_col + 1} "
+                            f"({header[order_col]!r}) is empty while {populated} of "
+                            f"{len(rows)} rows populate it. A row truncated by an "
+                            f"unquoted comma looks exactly like this, and it loads "
+                            f"with its last columns silently dropped.")
+
+                if mapping_col is None or mapping_col >= len(row):
+                    continue
+                cell = row[mapping_col].strip()
+                if cell and not MAPPING_CELL.match(cell):
+                    label = row[header.index("Fully specified name:en")].strip() \
+                        if "Fully specified name:en" in header and \
+                        header.index("Fully specified name:en") < len(row) else row[0].strip()
+                    err(f"concepts/{name}:{lineno} 'Same as mappings' is {cell!r}, "
+                        f"which is not a mapping expression ({label[:50]}). The "
+                        f"Initializer ignores a cell it does not recognise, so the "
+                        f"mapping is lost silently. Expected "
+                        f"'mappings|<map type>[|<source>]:<code>[;<code>...]'. If this "
+                        f"value is a data type, an earlier column has shifted.")
+
+
 def check_ocl(backend: str) -> None:
     ocl_dir = os.path.join(backend, "ocl")
     if not os.path.isdir(ocl_dir):
@@ -234,6 +356,7 @@ def main() -> int:
     check_package_identity(root)
     check_uuids(backend)
     check_global_properties(backend, declared)
+    check_concept_rows(backend)
     check_ocl(backend)
     report_quarantine(backend)
 

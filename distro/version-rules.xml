@@ -11,6 +11,16 @@
         <ignoreVersion type="regex">.*</ignoreVersion>
       </ignoreVersions>
     </rule>
+    <!-- Never auto-update the Initializer. This is the Intuvance fork, not
+         org.openmrs.module, and its version carries the -intuvance.N qualifier that
+         marks the concept-preservation fix. Without this rule a routine
+         `versions:update-properties` would happily move the distro back to an
+         upstream release that deletes concept reference mappings on first boot. -->
+    <rule groupId="io.github.intuvance" artifactId="initializer-omod">
+      <ignoreVersions>
+        <ignoreVersion type="regex">.*</ignoreVersion>
+      </ignoreVersions>
+    </rule>
     <!-- Pinned to timestamped snapshots; managed manually -->
     <rule groupId="org.bahmni.module" artifactId="appointments-omod">
       <ignoreVersions>

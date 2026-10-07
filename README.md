@@ -90,9 +90,15 @@ Concretely, the running system is four containers and one one-shot job:
                    └────────────┘          └───────────────┘
 ```
 
-`db-init` seeds the pre-populated database and rotates credentials, then exits.
-The backend waits for it to complete successfully, so OpenMRS never starts against
-a database that lacks CIEL.
+`db-init` seeds the pre-populated database, archives the CIEL concept mappings and
+rotates credentials, then exits. The backend waits for it to complete
+successfully, so OpenMRS never starts against a database that lacks CIEL.
+
+`db-verify` runs after the backend is healthy. It repairs the concept reference
+mappings that OpenMRS deletes during its first boot, then asserts the metadata
+this distribution depends on and fails the deployment if the install is not
+whole. See [the Initializer deletes the concept reference mappings](deployment/db/README.md#the-initializer-deletes-the-concept-reference-mappings)
+for why that is necessary and why the failure is otherwise invisible.
 
 ---
 
@@ -147,6 +153,8 @@ cp .env.example .env
 │   │   ├── Dockerfile          builds the pre-populated seed image
 │   │   ├── seed.sh             idempotent one-shot seed + credential rotation
 │   │   ├── purge-demo-data.sql strips demo data, preserves core metadata
+│   │   ├── concept-map-repair.sql  archives and replays the CIEL concept mappings
+│   │   ├── verify-terminology.sh   post-boot repair + integrity gate
 │   │   └── README.md           what the seed contains and why
 │
 ├── frontend/                   O3 assembly
@@ -280,6 +288,7 @@ addressed directly instead of through Compose's generated names:
 | `backend`   | `omrs-backend`   |
 | `db`        | `omrs-db`        |
 | `db-init`   | `omrs-db-init`   |
+| `db-verify` | `omrs-db-verify` |
 
 ```bash
 docker logs -f omrs-backend
@@ -363,6 +372,24 @@ first boot.
 That seed is a sanitised logical dump of a fully started Reference Application
 database, containing CIEL, the core concepts, the core concept sets and the core
 Reference Application metadata.
+
+On a healthy database `db-init` restores nothing: it verifies the terminology
+and exits in about 13 seconds. The dump is a fallback, replayed only when the
+seeded concepts are missing, when concept reference mappings have been lost, when
+mappings dangle, when `is_set` has fallen out of step with the `concept_set` rows,
+or when the shipped dump's checksum no longer matches the one that was applied.
+That last case is what keeps two fresh builds of the same commit in agreement.
+
+Those losses were not hypothetical. Upstream `openmrs-module-initializer` clears
+the Hibernate mappings collection of every concept it loads and re-adds only what
+the CSV column declares, which on a seeded distro costs 18,158 of 18,882 CIEL
+mappings and silently breaks drug orders, lab orders, medication workflows and
+FHIR concept translation. The distro ships the Intuvance fork instead, which does
+not clear unless the line actually declares mappings, and `db-init` archives the
+mappings regardless so an install predating the swap stays recoverable.
+`db-verify` re-checks all of it after startup.
+[`deployment/db/README.md`](deployment/db/README.md) documents the mechanism, the
+gate and the full set of defences.
 
 The seed is built by [`.github/workflows/build-db-seed.yml`](.github/workflows/build-db-seed.yml)
 from the same commit as the backend, so a database and a backend from different
@@ -853,21 +880,32 @@ Health checks, and what each one actually proves:
 | `frontend` | `GET /`                                         | the O3 shell is being served                                             |
 | `gateway`  | `GET /nginx-health`                             | routing is up                                                            |
 | `db-init`  | exit code                                       | initialisation completed; a non-zero exit blocks the backend             |
+| `db-verify`| exit code                                       | terminology is whole; a non-zero exit means the install is degraded       |
 
 The backend check deliberately targets `/openmrs/initialsetup` rather than a TCP
 port: a 200 there means startup is genuinely complete, not merely that a process
 is alive.
 
+`db-verify` is deliberately *not* a dependency of `frontend` or `gateway`. A hard
+gate would take the site down when the check fails, and an operator who cannot
+reach the login page cannot read the message explaining why. It fails loudly
+instead: `docker compose ps` shows the service exited non-zero, and
+`docker compose logs db-verify` carries the diagnosis.
+
 Startup failures are never swallowed. `db-init` exits non-zero and the backend
-does not start, and the acceptance test dumps the backend, `db-init` and `db` logs
-on failure.
+does not start, and the acceptance test dumps the backend, `db-init`, `db-verify`
+and `db` logs on failure.
 
 Logs are prefixed by service and by phase:
 
 ```text
 [db-init] restoring the pre-populated database from /openmrs-seed/seed.sql
+[db-init] archived 18882 concept reference mappings
 [db-init] credentials rotated
 [db-init] database already initialised; skipping seed and credential rotation
+[db-verify] mapping archive already holds 18882 mappings
+[db-verify] replaying archived concept reference mappings
+[db-verify] terminology verified
 ```
 
 so a failure is attributable to the database, the seed job, a module, the
@@ -1157,13 +1195,34 @@ apply — check that `intuvance-siteconfiguration` is in
 `distro/target/sdk-distro/web/openmrs_config/`.
 
 **Forms render empty, order sets resolve to nothing**
-Concepts are missing. Check the CIEL mapping count; if it is near zero the seed
-did not load:
+Concepts or their CIEL mappings are missing. Compare the live table with the
+archive; a shortfall means mappings were lost, and `db-verify` is the job that
+repairs and reports this:
 
 ```bash
 docker compose exec db mariadb -uroot -p"$MYSQL_ROOT_PASSWORD" openmrs -e \
-  "SELECT COUNT(*) FROM concept_reference_map;"
+  "SELECT (SELECT COUNT(*) FROM concept_reference_map)          AS live,
+          (SELECT COUNT(*) FROM openmrs_concept_map_archive)    AS archived;"
 ```
+
+Both numbers should match. If `db-verify` exited non-zero, its log names the
+metric. See
+[deployment/db/README.md](deployment/db/README.md#the-initializer-deletes-the-concept-reference-mappings).
+
+**Drug orders are rejected with `routeNotAmongAllowedConcepts`**
+`concept.is_set` is clear on concepts that have members, so `getSetMembers()`
+returns empty and OrderService finds no valid route or dosing unit. The
+liquibase changeset `2026-10-05-00-00-PM-30` repairs this on every boot;
+`db-verify` fails if it has not taken:
+
+```bash
+docker compose exec db mariadb -uroot -p"$MYSQL_ROOT_PASSWORD" openmrs -e \
+  "SELECT COUNT(*) FROM concept c
+     WHERE c.is_set = 0
+       AND EXISTS (SELECT 1 FROM concept_set s WHERE s.concept_set = c.concept_id);"
+```
+
+That query must return 0.
 
 **Frontend shows defaults instead of site configuration**
 `OMRS_SPA_CONFIG_URLS` does not point at the file the Initializer wrote. Confirm:
@@ -1191,7 +1250,10 @@ backend, `db-init` and `db` logs together.
 - [OpenMRS O3](https://o3docs.openmrs.org) — frontend and module development
 - [OpenMRS 3 Reference Application](https://www.openmrs.org/) — platform
 - [Initializer](https://github.com/mekomsolutions/openmrs-module-initializer) —
-  content package format and domains
+  content package format and domains. This distro ships the Intuvance fork,
+  [intuvance/openmrs-module-initializer](https://github.com/intuvance/openmrs-module-initializer),
+  pinned as `io.github.intuvance:initializer-omod` in `distro/pom.xml`. See
+  [Why this fork](deployment/db/README.md#the-initializer-deletes-the-concept-reference-mappings).
 - [openmrs-sdk-maven-plugin](https://github.com/openmrs/openmrs-sdk) — how
   `distro.properties` is interpreted
 - [OpenConceptLab](https://github.com/openmrs/openmrs-module-openconceptlab) —
